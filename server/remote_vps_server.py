@@ -14,7 +14,7 @@ Security model:
   - Formats come from a fixed allowlist.
   - Per-IP rate limits and concurrent stream limits stop the server being used
     as a free bulk proxy.
-  - yt-dlp's raw error output is logged server-side, never returned to clients.
+  - yt-dlp's raw error output is never logged or returned to clients.
   - ffmpeg only reads https stream URLs produced by yt-dlp's YouTube extractor,
     and is restricted to network protocols (no file:, concat:, etc.).
   - Optional user cookies (opt-in in the extension) are only accepted over
@@ -53,6 +53,8 @@ STREAM_MAX_SECONDS = 3 * 60 * 60
 REQUESTS_PER_MINUTE = 30
 MAX_STREAMS_PER_IP = 2
 MAX_STREAMS_GLOBAL = 12
+MAX_METADATA_GLOBAL = 4
+METADATA_SLOTS = threading.BoundedSemaphore(MAX_METADATA_GLOBAL)
 
 FALLBACK_EXTRACTOR_ARGS = "youtube:player_client=android,ios,tv,web"
 FFMPEG_PROTOCOLS = "https,tls,tcp,http,hls,crypto"
@@ -220,6 +222,15 @@ def _run_dump_json(extra_args, video_id, cookie_file=None):
 
 
 def fetch_metadata(video_id, cookie_file=None):
+    if not METADATA_SLOTS.acquire(blocking=False):
+        raise UserError("Server is busy. Please try again shortly.", 503)
+    try:
+        return _fetch_metadata(video_id, cookie_file)
+    finally:
+        METADATA_SLOTS.release()
+
+
+def _fetch_metadata(video_id, cookie_file=None):
     # Attempt 1: default clients (with JS challenge solver); attempt 2: mobile/TV clients.
     last_err = ""
     for extra in ([], ["--extractor-args", FALLBACK_EXTRACTOR_ARGS]):
@@ -234,8 +245,7 @@ def fetch_metadata(video_id, cookie_file=None):
                 last_err = "invalid json"
                 continue
         last_err = proc.stderr or proc.stdout or ""
-    errors = [l for l in last_err.splitlines() if "ERROR" in l] or [last_err[-400:]]
-    log(f"yt-dlp metadata error for {video_id} (cookies={'yes' if cookie_file else 'no'}): {errors[-1][:400]}")
+    log(f"yt-dlp metadata lookup failed for {video_id} (cookies={'yes' if cookie_file else 'no'})")
     if last_err == "timeout":
         raise UserError("Timed out while reading video details.", 504)
     if "sign in to confirm you" in last_err.lower() and not cookie_file:
@@ -407,6 +417,10 @@ class RemoteHandler(BaseHTTPRequestHandler):
         self.end_headers()
         self.wfile.write(body)
 
+    def _origin_ok(self):
+        origin = self.headers.get("Origin")
+        return origin is None or re.fullmatch(r"chrome-extension://[a-p]{32}", origin) is not None
+
     def _error(self, status, message, code=None):
         payload = {"success": False, "error": message}
         if code:
@@ -430,11 +444,17 @@ class RemoteHandler(BaseHTTPRequestHandler):
 
     # ---------- routes ----------
     def do_OPTIONS(self):
+        if not self._origin_ok():
+            self._error(403, "Forbidden")
+            return
         self.send_response(204)
         self._send_cors()
         self.end_headers()
 
     def do_GET(self):
+        if not self._origin_ok():
+            self._error(403, "Forbidden")
+            return
         parsed = urlparse(self.path)
         qs = parse_qs(parsed.query)
 
@@ -465,6 +485,9 @@ class RemoteHandler(BaseHTTPRequestHandler):
                 pass
 
     def do_POST(self):
+        if not self._origin_ok():
+            self._error(403, "Forbidden")
+            return
         parsed = urlparse(self.path)
         if not check_rate(self._client_ip()):
             self._error(429, "Too many requests. Please slow down.")
@@ -565,12 +588,24 @@ class RemoteHandler(BaseHTTPRequestHandler):
             raise UserError("Too many downloads in progress. Please wait for one to finish.", 429)
 
         proc = None
+        watchdog = None
         try:
             spec = job["spec"]
             content_type = "audio/mpeg" if spec["type"] == "audio" else "video/mp4"
             cmd = ffmpeg_command(spec)
 
             proc = subprocess.Popen(cmd, stdout=subprocess.PIPE, stderr=subprocess.DEVNULL)
+
+            def stop_process():
+                try:
+                    proc.kill()
+                except ProcessLookupError:
+                    pass
+
+            # A stalled stdout read must not hold a stream slot indefinitely.
+            watchdog = threading.Timer(STREAM_MAX_SECONDS, stop_process)
+            watchdog.daemon = True
+            watchdog.start()
 
             self.send_response(200)
             self._send_cors()
@@ -581,20 +616,23 @@ class RemoteHandler(BaseHTTPRequestHandler):
             self.send_header("Content-Disposition", f"attachment; filename=\"{encoded}\"; filename*=UTF-8''{encoded}")
             self.end_headers()
 
-            deadline = time.time() + STREAM_MAX_SECONDS
-            while time.time() < deadline:
+            deadline = time.monotonic() + STREAM_MAX_SECONDS
+            while time.monotonic() < deadline:
                 chunk = proc.stdout.read(64 * 1024)
                 if not chunk:
                     break
                 self.wfile.write(chunk)
         finally:
+            if watchdog is not None:
+                watchdog.cancel()
             if proc is not None:
                 if proc.poll() is None:
-                    proc.kill()
+                    stop_process()
                 try:
                     proc.wait(timeout=5)
                 except Exception:
                     pass
+                proc.stdout.close()
             release_stream(ip)
 
     def log_message(self, format, *args):

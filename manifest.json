@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "YouTube Video Downloader",
   "version": "1.2.1",
-  "description": "Native, 100% private YouTube video and audio downloader. Lossless 4K, 1080p, 720p, MP3, and HD thumbnails.",
+  "description": "YouTube video and audio downloader powered by a hosted engine. 4K, 1080p, 720p, MP3, and HD thumbnails.",
   "permissions": [
     "activeTab",
     "downloads",

@@ -11,7 +11,7 @@ fi
 # Setup environment if missing
 if [ ! -d "$DIR/server/venv" ]; then
     python3 -m venv "$DIR/server/venv"
-    "$DIR/server/venv/bin/pip" install yt-dlp
+    "$DIR/server/venv/bin/pip" install -r "$DIR/server/requirements.txt"
 fi
 
 # Run server silently in background

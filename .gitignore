@@ -1,7 +1,10 @@
 # Python virtual environment and bytecode
 server/venv/
+.venv/
+venv/
 __pycache__/
 *.pyc
+*.pyo
 
 # Local usage analytics: private tooling (names the VPS host and SSH login) and
 # log snapshots containing visitors' IP addresses. Never commit any of it.
@@ -15,6 +18,9 @@ landing/worker.js
 .env.*
 *.pem
 *.key
+cookies.txt
+cookies-*.txt
+*.log
 
 # Local tooling and OS files
 .claude/

@@ -42,7 +42,7 @@ Downloads sometimes stop with *"YouTube is asking for a sign-in check"*, because
 ## 🔒 Privacy & security
 
 - **What the engine receives:** the YouTube video ID, the chosen format, and (like any web server) your IP address in its request logs. Video files are streamed straight through to your browser and never stored on the server.
-- **YouTube session (opt-in, off by default):** uses the optional `cookies` permission. Only a short allowlist of YouTube login cookies is sent, only over HTTPS, and the engine deletes them right after looking up the video. They are never logged or stored. Switching it off removes the permission.
+- **YouTube session (opt-in, off by default):** uses the optional `cookies` permission. Allowlisted YouTube login cookies are sent to the engine over HTTPS, written to a private temporary file for the video lookup, then deleted when the lookup finishes. These cookies are account credentials: only enable this for an engine operator you trust. Switching it off removes the permission.
 - **Hardened engine:** only YouTube video links are accepted (rebuilt from the 11-character video ID), downloads use short-lived single-use tickets, requests are rate-limited, and raw errors are never sent back to clients.
 - **Extension:** only talks to the engine and YouTube, ignores messages from other extensions or pages, and never inserts page or server text as HTML.
 
@@ -61,8 +61,10 @@ By default the extension uses the maintainer's hosted engine at `https://ytapi.a
    ```bash
    sudo mkdir -p /opt/yt-downloader && cd /opt/yt-downloader
    sudo cp /path/to/this/repo/server/remote_vps_server.py server.py
-   sudo python3 -m venv venv && sudo venv/bin/pip install -U yt-dlp
+   sudo cp /path/to/this/repo/server/requirements.txt requirements.txt
+   sudo python3 -m venv venv && sudo venv/bin/pip install -U -r requirements.txt
    sudo apt install -y ffmpeg
+   sudo useradd --system --user-group --home-dir /var/lib/yt-downloader --shell /usr/sbin/nologin yt-downloader
    ```
 
 2. **Run it as a service.** Example `/etc/systemd/system/yt-downloader.service`:
@@ -73,6 +75,9 @@ By default the extension uses the maintainer's hosted engine at `https://ytapi.a
    After=network-online.target
 
    [Service]
+   User=yt-downloader
+   Group=yt-downloader
+   StateDirectory=yt-downloader
    WorkingDirectory=/opt/yt-downloader
    ExecStart=/opt/yt-downloader/venv/bin/python3 /opt/yt-downloader/server.py
    # Listen only where your reverse proxy can reach it, never on the public IP
@@ -94,7 +99,9 @@ By default the extension uses the maintainer's hosted engine at `https://ytapi.a
    | `YTDL_BIND` | `0.0.0.0` | Address to listen on. Use `127.0.0.1` (or a Docker bridge IP) behind a proxy. |
    | `YTDL_PORT` | `8989` | Port to listen on. |
    | `YTDLP_BIN` | `/opt/yt-downloader/venv/bin/yt-dlp` | Path to yt-dlp. |
-   | `YTDL_TRUSTED_PROXIES` | `172.16.0.0/12,127.0.0.1/32` | Networks your reverse proxy connects from. Only these may pass `X-Forwarded-For`, and session cookies are only accepted through them (i.e. over HTTPS). |
+   | `YTDL_TRUSTED_PROXIES` | `172.16.0.0/12,127.0.0.1/32` | Networks allowed to supply `X-Forwarded-For` and send session cookies. Restrict this to your actual proxy addresses. HTTPS must be enforced by the reverse proxy. |
+
+   The service user needs `ffmpeg` and Deno available on its PATH. Install Deno system-wide if it currently lives in your own home directory. The engine allows four simultaneous metadata lookups and twelve streams globally; excess work receives a retryable error.
 
 3. **Put it behind HTTPS.** Example Caddyfile:
 
@@ -114,6 +121,8 @@ By default the extension uses the maintainer's hosted engine at `https://ytapi.a
 
 Servers in data centres are often hit by YouTube's sign-in check, so users of a self-hosted engine will usually need the **Use my YouTube session** switch.
 
+When updating an existing engine, upgrade its virtual environment with `pip install -U -r requirements.txt` and restart the service. Keep request bodies and `/stream` query strings out of reverse-proxy logs: they can contain cookies and download tickets. Before deploying, verify HTTPS enforcement and restrict access to the engine port to your proxy. The engine currently trusts the proxy's address when accepting cookies; it does not independently verify the original connection's protocol. Repeat these checks for each environment you operate.
+
 ---
 
 ## 📁 Project structure
@@ -127,6 +136,7 @@ Servers in data centres are often hit by YouTube's sign-in check, so users of a 
 ├── server/
 │   ├── remote_vps_server.py # The download engine (see Self-hosting)
 │   ├── test_pick_formats.py # Tests for the engine's format selection
+│   ├── test_security.py     # Offline engine security and compatibility tests
 │   └── server.py            # Older local engine (not used by the current extension)
 ├── start_server.*, setup_autostart.*, uninstall_autostart.command,
 │   YouTube Downloader.app   # Helpers for the older local engine

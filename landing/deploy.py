@@ -23,6 +23,7 @@ def build_zip():
     files_to_include = [
         'manifest.json',
         'README.md',
+        'LICENSE',
         'background/background.js',
         'content/content.js',
         'content/content.css',
