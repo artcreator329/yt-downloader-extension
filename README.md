@@ -64,5 +64,14 @@ YT_downloader_chromeExt/
 ├── server/                       # Local companion engine scripts (optional fallback)
 │   ├── server.py
 │   └── requirements.txt
+├── LICENSE                       # MIT License
 └── README.md                     # Documentation
 ```
+
+---
+
+## 📄 License
+
+Released under the [MIT License](LICENSE). You're free to use, copy, modify and share this project, as long as the copyright notice is kept. It comes with no warranty.
+
+Downloading videos may be restricted by YouTube's Terms of Service and by copyright law where you live. Only download content you have the right to save.
