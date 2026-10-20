@@ -1,0 +1,341 @@
+/* YouTube Video Downloader - Injected Button & Menu Styles */
+
+#yt-downloader-btn-container {
+  display: inline-flex;
+  position: relative;
+  margin-left: 8px;
+  vertical-align: middle;
+  font-family: "Roboto", "YouTube Sans", -apple-system, BlinkMacSystemFont, sans-serif;
+  z-index: 9999;
+}
+
+.yt-dl-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 16px;
+  border-radius: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  outline: none;
+  transition: all 0.2s ease;
+  user-select: none;
+  background-color: #ff0033;
+  color: #ffffff;
+  box-shadow: 0 2px 8px rgba(255, 0, 51, 0.35);
+}
+
+.yt-dl-btn:hover {
+  background-color: #cc0029;
+  transform: translateY(-1px);
+}
+
+.yt-dl-btn:active {
+  transform: translateY(0);
+}
+
+.yt-dl-btn.downloading {
+  background-color: #1a73e8;
+  box-shadow: 0 2px 8px rgba(26, 115, 232, 0.4);
+  cursor: default;
+}
+
+.yt-dl-btn.started {
+  background-color: #0f9d58;
+  box-shadow: 0 2px 8px rgba(15, 157, 88, 0.4);
+}
+
+.yt-dl-spinner {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.35);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: ytDlSpin 0.7s linear infinite;
+}
+
+@keyframes ytDlSpin {
+  to { transform: rotate(360deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .yt-dl-spinner { animation-duration: 1.8s; }
+}
+
+.yt-dl-btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+
+/* Dropdown Menu */
+.yt-dl-dropdown {
+  position: absolute;
+  top: 44px;
+  left: 0;
+  width: 270px;
+  background: #1f1f1f;
+  color: #f1f1f1;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  padding: 8px 0;
+  display: none;
+  flex-direction: column;
+  z-index: 10000;
+  backdrop-filter: blur(8px);
+  animation: ytDlFadeIn 0.15s ease-out;
+}
+
+@keyframes ytDlFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.yt-dl-dropdown.active {
+  display: flex;
+}
+
+.yt-dl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 16px 6px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #aaaaaa;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+
+.yt-dl-status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #10b981;
+}
+
+.yt-dl-status-dot.offline {
+  background: #ef4444;
+}
+
+.yt-dl-section-title {
+  padding: 6px 16px 2px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #888888;
+}
+
+.yt-dl-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 9px 16px;
+  font-size: 13px;
+  color: #f1f1f1;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.yt-dl-item:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.yt-dl-item-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.yt-dl-badge {
+  font-size: 10px;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.15);
+  color: #e0e0e0;
+}
+
+.yt-dl-badge.hd {
+  background: #0077ff;
+  color: #ffffff;
+}
+
+.yt-dl-badge.gold {
+  background: #f59e0b;
+  color: #000000;
+}
+
+.yt-dl-badge.audio {
+  background: #10b981;
+  color: #ffffff;
+}
+
+.yt-dl-divider {
+  height: 1px;
+  background: rgba(255, 255, 255, 0.08);
+  margin: 4px 0;
+}
+
+/* Toast Message */
+.yt-dl-toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #242424;
+  color: #ffffff;
+  padding: 12px 22px;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6), 0 0 0 1px rgba(255, 255, 255, 0.1);
+  font-size: 13px;
+  font-weight: 500;
+  z-index: 100000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  animation: ytDlToastIn 0.2s ease-out;
+}
+
+@keyframes ytDlToastIn {
+  from { opacity: 0; transform: translate(-50%, 10px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+
+.yt-dl-toast-btn {
+  background: #ff0033;
+  color: #ffffff;
+  border: none;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.yt-dl-toast-btn:hover {
+  background: #cc0029;
+}
+
+/* Modal for offline engine notice */
+.yt-dl-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100001;
+  backdrop-filter: blur(4px);
+}
+
+.yt-dl-modal {
+  background: #1c1c1c;
+  border: 1px solid #333333;
+  border-radius: 14px;
+  padding: 24px;
+  max-width: 440px;
+  width: 90%;
+  color: #ffffff;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8);
+}
+
+.yt-dl-modal h3 {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.yt-dl-modal p {
+  font-size: 13px;
+  color: #aaaaaa;
+  line-height: 1.5;
+  margin-bottom: 14px;
+}
+
+.yt-dl-codebox {
+  background: #0f0f0f;
+  border: 1px solid #282828;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-family: monospace;
+  font-size: 12px;
+  color: #3ea6ff;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.yt-dl-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.yt-dl-mbtn {
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.yt-dl-mbtn-primary {
+  background: #ff0033;
+  color: #fff;
+}
+
+.yt-dl-mbtn-secondary {
+  background: #2a2a2a;
+  color: #ccc;
+}
+
+/* Disabled resolution items */
+.yt-dl-item.disabled {
+  opacity: 0.38 !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+.yt-dl-badge.na {
+  background: rgba(255, 255, 255, 0.08) !important;
+  color: #777777 !important;
+}
+
+/* Buy Me a Coffee in-page item */
+.yt-dl-item.coffee-item {
+  background: rgba(255, 221, 0, 0.06);
+  border-radius: 6px;
+  margin: 2px 6px;
+}
+
+.yt-dl-item.coffee-item:hover {
+  background: rgba(255, 221, 0, 0.16) !important;
+}
+
+.yt-dl-badge.coffee {
+  background: #ffdd00 !important;
+  color: #000000 !important;
+  font-weight: 700 !important;
+}

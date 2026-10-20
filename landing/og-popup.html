@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<!-- Static copy of the real extension popup, used inside og-image.html.
+     Generated from popup/popup.html; styled by the real popup/popup.css. -->
+<html lang="en"><head><meta charset="UTF-8"><link rel="stylesheet" href="../popup/popup.css">
+<style>body { overflow: hidden; }</style></head>
+<body><div class="app-container"><header class="app-header">
+      <div class="brand">
+        <svg class="yt-icon" viewBox="0 0 24 24">
+          <path fill="#FF0033" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span class="brand-title">YT Downloader</span>
+      </div>
+      <div class="header-actions">
+        <span class="badge badge-connected">⚡ Cloud Engine Online</span>
+      </div>
+    </header><div class="tabs-header">
+      <button class="tab-btn active">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        <span>Downloader</span>
+      </button>
+      <button class="tab-btn">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <span>Tasks</span>
+        <span class="tab-badge hidden">0</span>
+      </button>
+    </div><div class="url-input-container">
+        <input type="text" placeholder="Paste YouTube link or Shorts URL..." />
+        <button class="btn btn-secondary">Load</button>
+      </div><div class="video-card">
+        <div class="thumbnail-wrapper">
+          <div style="width:100%;height:100%;background:radial-gradient(circle at 70% 30%,#fde68a,transparent 40%),linear-gradient(135deg,#16a34a,#0f766e 55%,#1e3a8a)"></div>
+          <span class="thumbnail-badge">YouTube</span>
+        </div>
+        <div class="video-info">
+          <h3>Big Buck Bunny | 4K Open Movie</h3>
+          <p>Blender Studio</p>
+        </div>
+      </div><div class="download-section">
+        <div class="section-label">Select Format</div>
+
+        <div class="options-grid">
+          
+          <button class="dl-card" data-quality="4k">
+            <div class="dl-card-content">
+              <span class="dl-card-title">4K Ultra HD</span>
+              <span class="dl-card-sub">2160p · VLC, not QuickTime</span>
+            </div>
+            <span class="chip chip-gold">4K</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="1080p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">1080p Full HD</span>
+              <span class="dl-card-sub">High Quality MP4</span>
+            </div>
+            <span class="chip chip-blue">1080p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="720p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">720p HD</span>
+              <span class="dl-card-sub">Fast Download</span>
+            </div>
+            <span class="chip chip-gray">720p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="360p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">360p Fast</span>
+              <span class="dl-card-sub">Small File</span>
+            </div>
+            <span class="chip chip-gray">360p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="mp3" style="grid-column: span 2;">
+            <div class="dl-card-content">
+              <span class="dl-card-title">320kbps MP3 Audio</span>
+              <span class="dl-card-sub">High Definition Sound Track</span>
+            </div>
+            <span class="chip chip-green">MP3</span>
+          </button>
+        </div>
+
+        
+        <div class="quick-tools">
+          <button class="tool-btn" title="Save MaxRes Thumbnail">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            Thumbnail
+          </button>
+          <button class="tool-btn" title="Open Downloads Folder">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+            Downloads
+          </button>
+          <button class="tool-btn" title="Copy CLI Command">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 2h-14c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 14l-4-4 1.41-1.41L12 13.17l5.59-5.59L19 9l-7 7z"/></svg>
+            yt-dlp
+          </button>
+        </div>
+      </div></div></body></html>

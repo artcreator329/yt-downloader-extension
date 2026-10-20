@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YouTube Downloader</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="brand">
+        <svg class="yt-icon" viewBox="0 0 24 24">
+          <path fill="#FF0033" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span class="brand-title">YT Downloader</span>
+      </div>
+      <div class="header-actions">
+        <span id="server-status-badge" class="badge badge-checking" title="Checking the download engine">Connecting…</span>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-header">
+      <button id="tab-btn-downloader" class="tab-btn active">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        <span>Downloader</span>
+      </button>
+      <button id="tab-btn-tasks" class="tab-btn">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <span>Tasks</span>
+        <span id="tasks-badge" class="tab-badge hidden">0</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: Downloader View -->
+    <div id="tab-view-downloader" class="tab-view active">
+      <!-- URL Input Section -->
+      <div class="url-input-container">
+        <input type="text" id="video-url-input" placeholder="Paste YouTube link or Shorts URL..." />
+        <button id="fetch-btn" class="btn btn-secondary">Load</button>
+      </div>
+
+      <!-- Opt-in: YouTube session for bot checks -->
+      <div id="session-card" class="session-card">
+        <label class="session-toggle" for="session-toggle">
+          <input type="checkbox" id="session-toggle" />
+          <span class="switch" aria-hidden="true"></span>
+          <span class="session-text">
+            <span class="session-title">Use my YouTube session</span>
+            <span class="session-sub">Only needed if YouTube shows a bot check. Sends just your YouTube login cookies, over HTTPS, and the server deletes them right after each download.</span>
+          </span>
+        </label>
+      </div>
+
+      <!-- Active Video Card -->
+      <div id="video-card" class="video-card hidden">
+        <div class="thumbnail-wrapper">
+          <img id="video-thumbnail" src="" alt="Thumbnail" />
+          <span id="video-badge" class="thumbnail-badge">YouTube</span>
+        </div>
+        <div class="video-info">
+          <h3 id="video-title">Video Title</h3>
+          <p id="video-author">Channel Name</p>
+        </div>
+      </div>
+
+      <!-- Active Download Progress Card (Pinned on Downloader tab if download is running) -->
+      <div id="progress-card" class="progress-card hidden" role="status" aria-live="polite">
+        <div class="progress-header">
+          <span class="progress-title">
+            <span id="progress-spinner" class="spinner" aria-hidden="true"></span>
+            <span id="progress-status-text">Preparing…</span>
+          </span>
+          <span id="progress-percentage"></span>
+        </div>
+        <div id="progress-file" class="progress-file"></div>
+        <div class="progress-bar-bg">
+          <div id="progress-bar-fill" class="progress-bar-fill"></div>
+        </div>
+        <div class="progress-footer">
+          <span id="progress-speed"></span>
+          <span class="progress-actions">
+            <button id="progress-downloads-btn" class="mini-action-btn mini-action-blue hidden">Open downloads</button>
+            <button id="progress-folder-btn" class="mini-action-btn hidden">Show in folder</button>
+            <button id="progress-cancel-btn" class="mini-cancel-btn">Cancel</button>
+          </span>
+        </div>
+      </div>
+
+      <!-- Status / Notification banner -->
+      <div id="status-banner" class="status-banner hidden"></div>
+
+      <!-- Main Download Options -->
+      <div id="download-section" class="download-section hidden">
+        <div class="section-label">Select Format</div>
+
+        <div class="options-grid">
+          <!-- 4K Ultra HD -->
+          <button id="card-4k" class="dl-card" data-quality="4k">
+            <div class="dl-card-content">
+              <span class="dl-card-title">4K Ultra HD</span>
+              <span class="dl-card-sub" id="sub-4k">2160p · VLC, not QuickTime</span>
+            </div>
+            <span class="chip chip-gold" id="chip-4k">4K</span>
+          </button>
+
+          <!-- 1080p -->
+          <button class="dl-card" data-quality="1080p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">1080p Full HD</span>
+              <span class="dl-card-sub">High Quality MP4</span>
+            </div>
+            <span class="chip chip-blue">1080p</span>
+          </button>
+
+          <!-- 720p -->
+          <button class="dl-card" data-quality="720p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">720p HD</span>
+              <span class="dl-card-sub">Fast Download</span>
+            </div>
+            <span class="chip chip-gray">720p</span>
+          </button>
+
+          <!-- 360p -->
+          <button class="dl-card" data-quality="360p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">360p Fast</span>
+              <span class="dl-card-sub">Small File</span>
+            </div>
+            <span class="chip chip-gray">360p</span>
+          </button>
+
+          <!-- MP3 -->
+          <button class="dl-card" data-quality="mp3" style="grid-column: span 2;">
+            <div class="dl-card-content">
+              <span class="dl-card-title">320kbps MP3 Audio</span>
+              <span class="dl-card-sub">High Definition Sound Track</span>
+            </div>
+            <span class="chip chip-green">MP3</span>
+          </button>
+        </div>
+
+        <!-- Quick Utilities -->
+        <div class="quick-tools">
+          <button id="dl-thumb-btn" class="tool-btn" title="Save MaxRes Thumbnail">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            Thumbnail
+          </button>
+          <button id="open-folder-btn" class="tool-btn" title="Open Downloads Folder">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+            Downloads
+          </button>
+          <button id="copy-cmd-btn" class="tool-btn" title="Copy CLI Command">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 2h-14c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 14l-4-4 1.41-1.41L12 13.17l5.59-5.59L19 9l-7 7z"/></svg>
+            yt-dlp
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="empty-state" class="empty-state">
+        <svg class="empty-icon" viewBox="0 0 24 24">
+          <path fill="#555" d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8 12.5v-9l6 4.5-6 4.5z"/>
+        </svg>
+        <p>Navigate to any YouTube video, or paste a link above to start downloading.</p>
+      </div>
+    </div>
+
+    <!-- TAB 2: Tasks & History View -->
+    <div id="tab-view-tasks" class="tab-view hidden">
+      <!-- Active Downloads Section -->
+      <div class="tasks-section">
+        <div class="tasks-section-header">
+          <span>Active Downloads</span>
+          <span id="active-tasks-count" class="counter-chip">0</span>
+        </div>
+        <div id="active-tasks-list" class="tasks-list">
+          <div class="tasks-empty-mini">No active downloads</div>
+        </div>
+      </div>
+
+      <!-- Download History Section -->
+      <div class="tasks-section" style="margin-top: 10px;">
+        <div class="tasks-section-header">
+          <span>Download History</span>
+          <button id="clear-history-btn" class="text-action-btn">Clear All</button>
+        </div>
+        <div id="history-tasks-list" class="tasks-list">
+          <div class="tasks-empty-mini">No downloaded videos yet</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Buy Me A Coffee Banner -->
+    <div class="coffee-card">
+      <a href="https://buymeacoffee.com/chriswenfeng" target="_blank" class="coffee-btn" id="coffee-link">
+        <svg class="coffee-icon" viewBox="0 0 24 24">
+          <path fill="currentColor" d="M20 3H4v10c0 2.21 1.79 4 4 4h6c2.21 0 4-1.79 4-4v-3h2c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 5h-2V5h2v3zM4 19h16v2H4z"/>
+        </svg>
+        <span>Support Developer (Buy Me a Coffee)</span>
+      </a>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

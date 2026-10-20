@@ -1,0 +1,1532 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>YT Downloader — 4K &amp; MP3 Chrome Extension</title>
+  <meta name="description" content="Download YouTube videos in 4K, 1080p and MP3 straight from Chrome. Free, ad-free, set up in 60 seconds.">
+  <meta name="theme-color" content="#07090f">
+  <link rel="canonical" href="https://yt.aigility.digital/">
+
+  <!-- Social previews (Open Graph + Twitter/X) -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="YT Downloader">
+  <meta property="og:url" content="https://yt.aigility.digital/">
+  <meta property="og:title" content="YT Downloader: save any YouTube video in 4K, 1080p or MP3">
+  <meta property="og:description" content="A free browser extension: open it on any YouTube video and save it in 4K, 1080p or MP3. No ads, no sign-up, set up in about a minute.">
+  <meta property="og:image" content="https://yt.aigility.digital/og.png">
+  <meta property="og:image:type" content="image/png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="The YT Downloader popup showing a YouTube video with 4K, 1080p, 720p, 360p and MP3 format options">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="YT Downloader: save any YouTube video in 4K, 1080p or MP3">
+  <meta name="twitter:description" content="A free browser extension: open it on any YouTube video and save it in 4K, 1080p or MP3. No ads, no sign-up, set up in about a minute.">
+  <meta name="twitter:image" content="https://yt.aigility.digital/og.png">
+  <meta name="twitter:image:alt" content="The YT Downloader popup showing a YouTube video with 4K, 1080p, 720p, 360p and MP3 format options">
+  <link rel="icon" type="image/png" href="/icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07090f;
+      --bg-2: #0d111c;
+      --surface: rgba(20, 26, 42, 0.72);
+      --surface-solid: #141a2a;
+      --surface-2: #1b2236;
+      --border: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --accent: #ff0033;
+      --accent-2: #ff4d6d;
+      --accent-soft: rgba(255, 0, 51, 0.12);
+      --accent-glow: rgba(255, 0, 51, 0.4);
+      --accent-grad: linear-gradient(135deg, #ff2a55 0%, #e0002d 55%, #b80025 100%);
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --green: #22c55e;
+      --green-soft: rgba(34, 197, 94, 0.12);
+      --amber: #f59e0b;
+      --amber-soft: rgba(245, 158, 11, 0.1);
+      --blue: #60a5fa;
+      --coffee: #ffdd00;
+      --radius: 20px;
+      --ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --mono: 'JetBrains Mono', ui-monospace, monospace;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      overflow-x: hidden;
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        radial-gradient(ellipse 70% 45% at 50% -10%, rgba(255, 0, 51, 0.22), transparent 70%),
+        radial-gradient(circle at 90% 35%, rgba(96, 165, 250, 0.07), transparent 45%),
+        radial-gradient(circle at 10% 75%, rgba(139, 92, 246, 0.07), transparent 45%);
+    }
+    body::after {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background-image: linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px);
+      background-size: 56px 56px;
+      mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 80% 60% at 50% 0%, #000 30%, transparent 75%);
+    }
+    a { color: inherit; }
+    code, .mono { font-family: var(--mono); }
+    .container { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+    @media (max-width: 480px) { .container { padding: 0 16px; } }
+
+    /* ---------- Header ---------- */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: rgba(7, 9, 15, 0.72);
+      backdrop-filter: blur(14px) saturate(140%);
+      -webkit-backdrop-filter: blur(14px) saturate(140%);
+      border-bottom: 1px solid var(--border);
+    }
+    .nav { display: flex; justify-content: space-between; align-items: center; height: 68px; gap: 12px; }
+    .logo { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 1.1rem; letter-spacing: -0.02em; text-decoration: none; color: #fff; }
+    .logo img { width: 34px; height: 34px; border-radius: 9px; box-shadow: 0 0 18px var(--accent-glow); }
+    .nav-actions { display: flex; gap: 6px; align-items: center; }
+    .nav-link { color: var(--text-muted); text-decoration: none; font-weight: 600; font-size: 0.9rem; padding: 8px 12px; border-radius: 10px; transition: color .2s, background .2s; }
+    .nav-link:hover { color: #fff; background: rgba(255,255,255,0.05); }
+    @media (max-width: 720px) { .nav-link { display: none; } }
+
+    /* ---------- Buttons ---------- */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 10px;
+      padding: 15px 28px; border-radius: 14px; font: inherit; font-weight: 700; font-size: 1rem;
+      text-decoration: none; cursor: pointer; border: 1px solid transparent;
+      transition: transform .25s var(--ease), box-shadow .25s var(--ease), background .2s, border-color .2s;
+      white-space: nowrap;
+    }
+    .btn:active { transform: translateY(0) scale(0.98); }
+    .btn:focus-visible, .copy-btn:focus-visible, .step-tab:focus-visible { outline: 2px solid var(--accent-2); outline-offset: 3px; }
+    .btn-primary { background: var(--accent-grad); color: #fff; border-color: rgba(255,255,255,0.18); box-shadow: 0 10px 30px var(--accent-glow), inset 0 1px 0 rgba(255,255,255,0.25); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 16px 44px rgba(255, 0, 51, 0.55), inset 0 1px 0 rgba(255,255,255,0.25); }
+    .btn-ghost { background: rgba(255,255,255,0.04); color: var(--text); border-color: var(--border-strong); }
+    .btn-ghost:hover { background: rgba(255,255,255,0.08); transform: translateY(-2px); }
+    .btn-coffee { background: var(--coffee); color: #000; box-shadow: 0 8px 24px rgba(255, 221, 0, 0.2); }
+    .btn-coffee:hover { transform: translateY(-2px); box-shadow: 0 12px 30px rgba(255, 221, 0, 0.35); }
+    .btn-sm { padding: 8px 16px; font-size: 0.88rem; border-radius: 11px; }
+    .btn-lg { padding: 18px 34px; font-size: 1.08rem; border-radius: 16px; }
+    .btn svg { width: 20px; height: 20px; flex-shrink: 0; }
+
+    /* ---------- Hero ---------- */
+    .hero { padding: 80px 0 56px; text-align: center; }
+    .hero-icon {
+      width: 92px; height: 92px; border-radius: 24px; margin: 0 auto 28px; display: block;
+      box-shadow: 0 18px 50px rgba(255, 0, 51, 0.45), 0 0 0 1px rgba(255,255,255,0.15);
+      animation: float 5s ease-in-out infinite;
+    }
+    @keyframes float { 0%,100% { transform: translateY(0) rotate(0); } 50% { transform: translateY(-8px) rotate(-2deg); } }
+    .pill {
+      display: inline-flex; align-items: center; gap: 8px; padding: 6px 14px; border-radius: 999px;
+      background: var(--accent-soft); border: 1px solid rgba(255, 0, 51, 0.3);
+      color: var(--accent-2); font-size: 0.83rem; font-weight: 700; margin-bottom: 22px;
+    }
+    .pill-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); box-shadow: 0 0 8px var(--accent); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100% { opacity: 1; transform: scale(1); } 50% { opacity: .5; transform: scale(.8); } }
+    h1 {
+      font-size: clamp(2.3rem, 5.6vw, 4.2rem); font-weight: 800; line-height: 1.08; letter-spacing: -0.035em;
+      margin-bottom: 22px;
+    }
+    h1 .grad { background: linear-gradient(90deg, #ff4d6d, #ff0033 40%, #ff7a59); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero-sub { font-size: clamp(1.02rem, 2vw, 1.2rem); color: var(--text-muted); max-width: 640px; margin: 0 auto 36px; }
+    .hero-cta { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; margin-bottom: 18px; }
+    .cta-meta { font-size: 0.84rem; color: var(--text-dim); display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+    .cta-meta span { display: inline-flex; align-items: center; gap: 6px; }
+    .cta-meta span::before { content: "✓"; color: var(--green); font-weight: 800; }
+    .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px; max-width: 760px; margin: 52px auto 0; background: var(--border); border: 1px solid var(--border); border-radius: 18px; overflow: hidden; }
+    .stat { background: var(--bg-2); padding: 18px 12px; }
+    .stat b { display: block; font-size: 1.45rem; font-weight: 800; letter-spacing: -0.02em; }
+    .stat small { color: var(--text-muted); font-size: 0.8rem; font-weight: 600; }
+    @media (max-width: 600px) { .stats { grid-template-columns: repeat(2, 1fr); } }
+
+    /* ---------- Section headings ---------- */
+    section { scroll-margin-top: 80px; }
+    .eyebrow { font-family: var(--mono); font-size: 0.78rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-2); text-align: center; margin-bottom: 10px; }
+    .section-title { text-align: center; font-size: clamp(1.8rem, 3.6vw, 2.5rem); font-weight: 800; letter-spacing: -0.03em; line-height: 1.15; margin-bottom: 12px; }
+    .section-desc { text-align: center; color: var(--text-muted); max-width: 580px; margin: 0 auto 40px; font-size: 1.04rem; }
+
+    /* ---------- Setup wizard ---------- */
+    .setup { padding: 64px 0 72px; }
+    .browser-warn {
+      display: none; max-width: 760px; margin: 0 auto 24px; padding: 14px 18px; border-radius: 14px;
+      background: var(--amber-soft); border: 1px solid rgba(245, 158, 11, 0.35); color: #fcd34d; font-size: 0.93rem; text-align: center;
+    }
+    .browser-warn.show { display: block; }
+    .wizard {
+      background: linear-gradient(180deg, rgba(27, 34, 54, 0.75), rgba(16, 21, 34, 0.75));
+      border: 1px solid var(--border-strong); border-radius: 28px; padding: 28px;
+      box-shadow: 0 30px 80px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06);
+      backdrop-filter: blur(12px);
+    }
+    @media (max-width: 600px) { .wizard { padding: 16px; border-radius: 22px; } }
+
+    /* Stepper */
+    .stepper { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 28px; }
+    .stepper-track { position: absolute; left: 16.66%; right: 16.66%; top: 22px; height: 3px; background: rgba(255,255,255,0.08); border-radius: 3px; overflow: hidden; }
+    .stepper-fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--green), #4ade80); transition: width .6s var(--ease); }
+    .step-tab {
+      position: relative; z-index: 1; display: flex; flex-direction: column; align-items: center; gap: 8px;
+      background: none; border: 0; color: var(--text-muted); font: inherit; cursor: pointer; padding: 0 4px 6px; border-radius: 12px;
+    }
+    .step-dot {
+      width: 46px; height: 46px; border-radius: 50%; display: grid; place-items: center;
+      font-family: var(--mono); font-weight: 700; font-size: 1rem;
+      background: var(--surface-solid); border: 2px solid var(--border-strong); color: var(--text-muted);
+      transition: all .35s var(--ease);
+    }
+    .step-label { font-size: 0.88rem; font-weight: 700; text-align: center; line-height: 1.3; }
+    .step-tab.active .step-dot { background: var(--accent-grad); border-color: transparent; color: #fff; box-shadow: 0 0 0 6px rgba(255,0,51,0.15), 0 8px 24px var(--accent-glow); transform: scale(1.06); }
+    .step-tab.active .step-label { color: #fff; }
+    .step-tab.done .step-dot { background: var(--green); border-color: transparent; color: #04210f; font-size: 0; }
+    .step-tab.done .step-dot::after { content: "✓"; font-size: 1.2rem; font-weight: 800; }
+    .step-tab.done .step-label { color: #bbf7d0; }
+    @media (max-width: 520px) { .step-label { font-size: 0.76rem; } .step-dot { width: 40px; height: 40px; } .stepper-track { top: 19px; } }
+
+    /* Panels */
+    .panel { display: none; grid-template-columns: 1.05fr 1fr; gap: 28px; align-items: stretch; }
+    .panel.active { display: grid; animation: panelIn .45s var(--ease); }
+    @keyframes panelIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+    @media (max-width: 860px) { .panel.active { grid-template-columns: 1fr; } .panel .visual { order: -1; } }
+    .panel-body { display: flex; flex-direction: column; min-width: 0; }
+    .todo li > * { min-width: 0; }
+    .panel-kicker { font-family: var(--mono); font-size: 0.78rem; font-weight: 700; color: var(--accent-2); letter-spacing: .08em; margin-bottom: 6px; }
+    .panel h3 { font-size: clamp(1.4rem, 2.6vw, 1.75rem); font-weight: 800; letter-spacing: -0.02em; line-height: 1.2; margin-bottom: 8px; }
+    .panel-lead { color: var(--text-muted); margin-bottom: 20px; }
+    .time-chip { display: inline-flex; align-items: center; gap: 6px; font-size: 0.78rem; font-weight: 700; color: var(--text-muted); background: rgba(255,255,255,0.05); border: 1px solid var(--border); border-radius: 999px; padding: 3px 10px; margin-left: 8px; vertical-align: middle; }
+
+    .todo { list-style: none; display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+    .todo li { display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start; padding: 14px; background: rgba(255,255,255,0.03); border: 1px solid var(--border); border-radius: 14px; }
+    .todo .n { width: 30px; height: 30px; border-radius: 9px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-2); font-family: var(--mono); font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(255,0,51,0.25); }
+    .todo p { font-size: 0.97rem; color: #dbe3ee; }
+    .todo p small { display: block; color: var(--text-muted); font-size: 0.86rem; margin-top: 3px; }
+    kbd { font-family: var(--mono); font-size: 0.8em; padding: 2px 7px; border-radius: 6px; background: var(--surface-2); border: 1px solid var(--border-strong); border-bottom-width: 2px; color: #fff; white-space: nowrap; }
+    .ui-word { display: inline-block; font-weight: 700; color: #fff; background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.3); padding: 0 7px; border-radius: 6px; font-size: 0.93em; }
+
+    .copy-row { display: flex; gap: 8px; margin-top: 10px; align-items: stretch; }
+    .copy-field { flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px; padding: 10px 14px; background: #04060b; border: 1px solid var(--border-strong); border-radius: 11px; font-family: var(--mono); font-size: 0.92rem; color: #7dd3fc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .copy-field::before { content: "🔒"; font-size: 0.8rem; opacity: .6; }
+    .copy-btn { flex-shrink: 0; border: 0; border-radius: 11px; padding: 0 16px; font: inherit; font-weight: 700; font-size: 0.9rem; cursor: pointer; background: #fff; color: #0b0f19; transition: background .2s, transform .2s; }
+    .copy-btn:hover { transform: translateY(-1px); }
+    .copy-btn.copied { background: var(--green); color: #04210f; }
+
+    .callout { display: flex; gap: 12px; padding: 13px 15px; border-radius: 14px; font-size: 0.9rem; margin-bottom: 20px; }
+    .callout b { color: #fff; }
+    .callout-tip { background: rgba(96,165,250,0.08); border: 1px solid rgba(96,165,250,0.25); color: #c7dcf5; }
+    .callout-warn { background: var(--amber-soft); border: 1px solid rgba(245,158,11,0.3); color: #f5dfae; }
+    .callout-ok { background: var(--green-soft); border: 1px solid rgba(34,197,94,0.35); color: #bbf7d0; display: none; }
+    .callout-ok.show { display: flex; animation: panelIn .4s var(--ease); }
+    .callout .ic { font-size: 1.05rem; line-height: 1.45; }
+
+    .panel-nav { margin-top: auto; display: flex; gap: 10px; justify-content: space-between; align-items: center; flex-wrap: wrap; padding-top: 6px; }
+    .panel-nav .back { background: none; border: 0; color: var(--text-muted); font: inherit; font-weight: 600; cursor: pointer; padding: 10px 4px; }
+    .panel-nav .back:hover { color: #fff; }
+    .panel-nav .btn { flex: 0 1 auto; }
+    @media (max-width: 480px) { .panel-nav .btn { flex: 1; } }
+
+    /* Visual mockups */
+    .visual {
+      position: relative; border-radius: 20px; overflow: hidden; min-height: 340px;
+      background: radial-gradient(circle at 50% 0%, rgba(255,0,51,0.12), transparent 60%), #0a0d16;
+      border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; padding: 22px;
+    }
+    .visual-caption { position: absolute; left: 0; right: 0; bottom: 12px; text-align: center; font-size: 0.78rem; color: var(--text-dim); font-weight: 600; }
+
+    /* Step 1 visual: zip -> folder */
+    .unzip { display: flex; align-items: center; gap: 22px; }
+    .file { display: flex; flex-direction: column; align-items: center; gap: 10px; width: 112px; text-align: center; }
+    .file-ic { width: 76px; height: 92px; position: relative; border-radius: 10px; }
+    .file-ic.zip { background: linear-gradient(160deg, #e2e8f0, #94a3b8); clip-path: polygon(0 0, 72% 0, 100% 22%, 100% 100%, 0 100%); }
+    .file-ic.zip::before { content: ""; position: absolute; left: 34px; top: 0; width: 8px; height: 56px; background: repeating-linear-gradient(180deg, #334155 0 6px, transparent 6px 12px); }
+    .file-ic.zip::after { content: "ZIP"; position: absolute; bottom: 10px; left: 0; right: 0; font-family: var(--mono); font-weight: 700; font-size: 0.75rem; color: #1e293b; }
+    .file-ic.folder { width: 96px; height: 76px; margin-top: 16px; background: linear-gradient(180deg, #60a5fa, #2563eb); border-radius: 6px 10px 10px 10px; box-shadow: 0 10px 30px rgba(37, 99, 235, 0.4); }
+    .file-ic.folder::before { content: ""; position: absolute; top: -12px; left: 0; width: 42px; height: 16px; background: #3b82f6; border-radius: 6px 8px 0 0; }
+    .file-name { font-family: var(--mono); font-size: 0.68rem; color: #cbd5e1; word-break: break-all; line-height: 1.35; }
+    .arrow-anim { font-size: 1.6rem; color: var(--accent-2); animation: nudge 1.6s ease-in-out infinite; }
+    @keyframes nudge { 0%,100% { transform: translateX(-4px); opacity: .6; } 50% { transform: translateX(4px); opacity: 1; } }
+    .unzip .file:last-child { animation: popIn 3.2s var(--ease) infinite; }
+    @keyframes popIn { 0%, 25% { opacity: .25; transform: scale(.85); } 45%, 100% { opacity: 1; transform: scale(1); } }
+
+    /* Fake browser */
+    .browser { width: 100%; max-width: 440px; border-radius: 14px; overflow: hidden; background: #202124; border: 1px solid rgba(255,255,255,0.12); box-shadow: 0 24px 60px rgba(0,0,0,0.55); font-size: 12px; }
+    .browser-bar { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: #2b2c30; }
+    .dots { display: flex; gap: 6px; }
+    .dots i { width: 10px; height: 10px; border-radius: 50%; background: #ff5f57; }
+    .dots i:nth-child(2) { background: #febc2e; } .dots i:nth-child(3) { background: #28c840; }
+    .omnibox { flex: 1; background: #1a1b1e; border-radius: 999px; padding: 6px 12px; font-family: var(--mono); color: #e8eaed; font-size: 11px; position: relative; overflow: hidden; white-space: nowrap; }
+    .omnibox .typed { display: inline-block; overflow: hidden; vertical-align: bottom; border-right: 2px solid #8ab4f8; animation: typing 4s steps(19) infinite, caret .7s step-end infinite; width: 0; }
+    @keyframes typing { 0% { width: 0; } 40%, 100% { width: 19ch; } }
+    @keyframes caret { 50% { border-color: transparent; } }
+    .tb-ic { width: 22px; height: 22px; display: grid; place-items: center; border-radius: 6px; color: #9aa0a6; font-size: 13px; position: relative; }
+    .ext-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 12px 14px; border-bottom: 1px solid #3c4043; background: #202124; }
+    .ext-head h5 { color: #e8eaed; font-size: 13px; font-weight: 600; }
+    .dev-toggle { display: flex; align-items: center; gap: 8px; color: #e8eaed; font-size: 11px; padding: 5px 8px; border-radius: 8px; position: relative; }
+    .switch { width: 30px; height: 16px; border-radius: 999px; background: #5f6368; position: relative; }
+    .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 12px; height: 12px; border-radius: 50%; background: #e8eaed; transition: transform .3s; }
+    .anim-toggle .switch { animation: switchBg 4s infinite; }
+    .anim-toggle .switch::after { animation: switchKnob 4s infinite; }
+    @keyframes switchBg { 0%, 45% { background: #5f6368; } 55%, 100% { background: #8ab4f8; } }
+    @keyframes switchKnob { 0%, 45% { transform: translateX(0); } 55%, 100% { transform: translateX(14px); } }
+    .ring { position: absolute; inset: -4px; border-radius: 10px; border: 2px solid var(--accent); box-shadow: 0 0 0 4px rgba(255,0,51,0.2); animation: ring 1.6s ease-out infinite; pointer-events: none; }
+    @keyframes ring { 0% { opacity: 1; transform: scale(.96); } 100% { opacity: 0; transform: scale(1.12); } }
+    .ext-actions { display: flex; gap: 8px; padding: 10px 14px; border-bottom: 1px solid #3c4043; }
+    .ext-btn { position: relative; padding: 5px 10px; border-radius: 6px; border: 1px solid #5f6368; color: #8ab4f8; font-size: 11px; font-weight: 600; }
+    .ext-btn.dim { opacity: .45; }
+    .ext-body { padding: 14px; min-height: 120px; display: flex; flex-direction: column; gap: 10px; }
+    .ext-card { display: flex; gap: 10px; align-items: center; padding: 10px; border-radius: 8px; background: #292a2d; border: 1px solid #3c4043; }
+    .ext-card img { width: 30px; height: 30px; border-radius: 7px; }
+    .ext-card b { color: #e8eaed; font-size: 12px; display: block; }
+    .ext-card small { color: #9aa0a6; font-size: 10.5px; }
+    .switch.on { background: #8ab4f8; }
+    .switch.on::after { transform: translateX(14px); }
+    .ext-card .switch { margin-left: auto; background: #8ab4f8; }
+    .ext-card .switch::after { transform: translateX(14px); }
+    .ext-card.ghost { opacity: .35; }
+    .ext-card.new { animation: cardIn 4.5s var(--ease) infinite; }
+    @keyframes cardIn { 0%, 30% { opacity: 0; transform: translateY(8px); } 45%, 100% { opacity: 1; transform: none; } }
+    .ext-placeholder { height: 52px; border-radius: 8px; background: repeating-linear-gradient(90deg, #292a2d 0 40%, #2f3034 40% 100%); opacity: .5; }
+    .pin-pop { position: absolute; top: 44px; right: 12px; width: 190px; background: #2b2c30; border: 1px solid #3c4043; border-radius: 10px; padding: 8px; box-shadow: 0 12px 30px rgba(0,0,0,.5); animation: cardIn 4.5s var(--ease) infinite; animation-delay: .8s; }
+    .pin-pop div { display: flex; align-items: center; gap: 8px; padding: 6px; border-radius: 6px; color: #e8eaed; font-size: 11px; }
+    .pin-pop div:first-child { background: rgba(138, 180, 248, 0.12); }
+    .pin-pop img { width: 16px; height: 16px; border-radius: 4px; }
+    .pin-pop .pin { margin-left: auto; color: #8ab4f8; }
+    .browser-wrap { position: relative; width: 100%; max-width: 440px; }
+
+    /* Done state */
+    .done-panel { text-align: center; padding: 28px 8px 8px; }
+    .done-badge { width: 92px; height: 92px; border-radius: 50%; margin: 0 auto 22px; display: grid; place-items: center; font-size: 2.6rem; background: var(--green); color: #04210f; box-shadow: 0 0 0 10px rgba(34,197,94,.15), 0 16px 50px rgba(34,197,94,.4); animation: bounceIn .7s var(--ease); }
+    @keyframes bounceIn { 0% { transform: scale(.3); opacity: 0; } 60% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+    .done-panel h3 { font-size: clamp(1.6rem, 3.4vw, 2.2rem); font-weight: 800; letter-spacing: -0.02em; margin-bottom: 10px; }
+    .done-panel p { color: var(--text-muted); max-width: 520px; margin: 0 auto 26px; }
+    .done-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .done-panel .restart { margin-top: 18px; background: none; border: 0; color: var(--text-dim); font: inherit; font-size: 0.88rem; cursor: pointer; text-decoration: underline; }
+    .confetti { position: fixed; top: -12px; width: 9px; height: 14px; border-radius: 2px; pointer-events: none; z-index: 100; animation: fall linear forwards; }
+    @keyframes fall { to { transform: translateY(105vh) rotate(720deg); opacity: .9; } }
+
+    /* ---------- How-to walkthrough (reuses the setup wizard styles) ---------- */
+    .howto { padding: 64px 0 72px; border-top: 1px solid var(--border); }
+    .howto .stepper { grid-template-columns: repeat(4, 1fr); }
+    .howto .stepper-track { left: 12.5%; right: 12.5%; }
+    .howto .step-tab.optional .step-dot { border-style: dashed; }
+    .howto .visual-tall { align-items: flex-start; min-height: 520px; padding-bottom: 0; }
+
+    /* Frames around the replicas of the real extension UI */
+    .pp-window { width: 360px; flex: none; border-radius: 12px; overflow: hidden; background: #0f0f0f; border: 1px solid rgba(255,255,255,0.14); box-shadow: 0 24px 60px rgba(0,0,0,0.55); zoom: 0.92; }
+    .pp-window.crop { max-height: 590px; -webkit-mask-image: linear-gradient(#000 84%, transparent); mask-image: linear-gradient(#000 84%, transparent); }
+    @media (max-width: 480px) { .pp-window { zoom: 0.8; } }
+    .pp-window .pp { width: 100%; }
+    .pp .pp-thumb { width: 100%; height: 100%; background: radial-gradient(circle at 70% 30%, #fde68a, transparent 40%), linear-gradient(135deg, #16a34a, #0f766e 55%, #1e3a8a); }
+    .pp .pp-target { position: relative; }
+    .pp .pp-target .ring { border-radius: 10px; }
+    .pp .pp-stack { display: grid; }
+    .pp .pp-stack > .progress-card { grid-area: 1 / 1; opacity: 0; animation: ppCycle 7.5s infinite; }
+    .pp .pp-stack > .progress-card:nth-child(1) { opacity: 1; }
+    .pp .pp-stack > .progress-card:nth-child(2) { animation-delay: 2.5s; }
+    .pp .pp-stack > .progress-card:nth-child(3) { animation-delay: 5s; }
+    @keyframes ppCycle { 0%, 31% { opacity: 1; visibility: visible; } 33.3%, 100% { opacity: 0; visibility: hidden; } }
+    .pp .session-card.pp-demo { position: relative; animation: ppAttention 4s infinite; }
+    .pp .session-card.pp-demo .switch { animation: ppSwitchBg 4s infinite; }
+    .pp .session-card.pp-demo .switch::after { animation: ppSwitchKnob 4s infinite; }
+    @keyframes ppSwitchBg { 0%, 40% { background: #3a3a3a; } 50%, 100% { background: #10b981; } }
+    @keyframes ppSwitchKnob { 0%, 40% { transform: none; } 50%, 100% { transform: translateX(13px); } }
+    @keyframes ppAttention { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,0,51,0); } 30% { box-shadow: 0 0 0 3px rgba(255,0,51,0.45); } }
+
+    /* Step 1: browser toolbar with the extension icon, popup opening beneath it */
+    .pp-scene { width: 100%; max-width: 440px; display: flex; flex-direction: column; align-items: flex-end; }
+    .pp-toolbar { width: 100%; border-radius: 12px; border: 1px solid rgba(255,255,255,0.12); font-size: 12px; margin-bottom: 8px; }
+    .pp-ours { position: relative; background: rgba(138,180,248,0.16); }
+    .pp-ours img { width: 16px; height: 16px; border-radius: 4px; }
+    .pp-scene .pp-window { margin-right: 4px; }
+
+    /* ===== BEGIN generated replica CSS (landing/sync_replica_css.py) ===== */
+/* popup/popup.css */
+.pp * { box-sizing: border-box; margin: 0; padding: 0; }
+.pp { width: 360px; background-color: #0f0f0f; color: #f1f1f1; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "YouTube Sans", Helvetica, Arial, sans-serif; font-size: 13px; line-height: 1.4; overflow-x: hidden; user-select: none; }
+.pp .app-container { padding: 14px 16px; display: flex; flex-direction: column; gap: 12px; }
+.pp .app-header { display: flex; align-items: center; justify-content: space-between; }
+.pp .brand { display: flex; align-items: center; gap: 8px; }
+.pp .yt-icon { width: 24px; height: 24px; }
+.pp .brand-title { font-size: 15px; font-weight: 700; letter-spacing: -0.2px; color: #ffffff; }
+.pp .badge { font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 12px; }
+.pp .badge-connected { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); }
+.pp .badge-ready { background: rgba(62, 166, 255, 0.18); color: #3ea6ff; border: 1px solid rgba(62, 166, 255, 0.35); }
+.pp .badge-offline { background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); }
+.pp .badge-checking { display: inline-flex; align-items: center; gap: 5px; background: rgba(255, 255, 255, 0.06); color: #aaaaaa; border: 1px solid #333333; }
+.pp .spinner { display: inline-block; flex: none; width: 12px; height: 12px; border: 2px solid rgba(255, 255, 255, 0.2); border-top-color: currentColor; border-radius: 50%; animation: pp-spin 0.7s linear infinite; }
+.pp .badge .spinner { width: 9px; height: 9px; border-width: 1.5px; }
+.pp .btn .spinner { vertical-align: -2px; margin-right: 6px; }
+@keyframes pp-spin {to { transform: rotate(360deg); }}
+.pp .engine-alert { background: #1e1818; border: 1px solid #4a2020; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+.pp .engine-alert-header { font-weight: 700; color: #ff6b6b; font-size: 12px; }
+.pp .engine-alert p { font-size: 11px; color: #bbbbbb; line-height: 1.4; }
+.pp .code-pill { display: flex; align-items: center; justify-content: space-between; background: #0f0f0f; border: 1px solid #332020; border-radius: 6px; padding: 6px 8px; font-family: monospace; font-size: 11px; color: #3ea6ff; }
+.pp .mini-btn { background: #ff0033; color: #fff; border: none; border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600; cursor: pointer; }
+.pp .mini-btn:hover { background: #cc0029; }
+.pp .url-input-container { display: flex; gap: 6px; }
+.pp .url-input-container input { flex: 1; background: #212121; border: 1px solid #333333; color: #ffffff; padding: 8px 12px; border-radius: 8px; font-size: 12px; outline: none; transition: border-color 0.15s; }
+.pp .url-input-container input:focus { border-color: #ff0033; }
+.pp .url-input-container input::placeholder { color: #777777; }
+.pp .btn { border: none; cursor: pointer; font-weight: 600; font-size: 12px; border-radius: 8px; padding: 8px 14px; transition: background 0.15s, transform 0.1s; }
+.pp .btn:active { transform: scale(0.98); }
+.pp .btn:disabled { opacity: 0.75; cursor: default; transform: none; }
+.pp .btn-secondary { background: #2a2a2a; color: #f1f1f1; }
+.pp .btn-secondary:hover { background: #383838; }
+.pp .video-card { display: flex; gap: 12px; background: #181818; border: 1px solid #282828; border-radius: 10px; padding: 8px; align-items: center; }
+.pp .thumbnail-wrapper { position: relative; width: 110px; height: 64px; border-radius: 6px; overflow: hidden; flex-shrink: 0; background: #000; }
+.pp .thumbnail-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+.pp .thumbnail-badge { position: absolute; bottom: 4px; right: 4px; background: rgba(0, 0, 0, 0.75); color: #fff; font-size: 9px; font-weight: 600; padding: 1px 4px; border-radius: 3px; }
+.pp .video-info { flex: 1; min-width: 0; }
+.pp .video-info h3 { font-size: 13px; font-weight: 600; color: #f1f1f1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+.pp .video-info p { font-size: 11px; color: #aaaaaa; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp .progress-card { background: #162238; border: 1px solid #1f3b6d; border-radius: 10px; padding: 12px; display: flex; flex-direction: column; gap: 6px; animation: pp-fadeIn 0.2s; }
+.pp .progress-header { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 12px; font-weight: 600; color: #3ea6ff; }
+.pp .progress-title { display: inline-flex; align-items: center; gap: 7px; min-width: 0; }
+.pp .progress-file { font-size: 11px; color: #cfd8e6; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp .progress-file:empty { display: none; }
+.pp .progress-card.is-done { background: rgba(16, 185, 129, 0.1); border-color: rgba(16, 185, 129, 0.45); }
+.pp .progress-card.is-done .progress-header { color: #10b981; }
+.pp .progress-card.is-error { background: rgba(239, 68, 68, 0.1); border-color: rgba(239, 68, 68, 0.45); }
+.pp .progress-card.is-error .progress-header { color: #ef4444; }
+.pp .progress-card.is-error .progress-bar-bg { display: none; }
+.pp .progress-bar-bg { width: 100%; height: 8px; background: rgba(255, 255, 255, 0.1); border-radius: 4px; overflow: hidden; }
+.pp .progress-bar-fill { height: 100%; width: 0%; background: linear-gradient(90deg, #3ea6ff, #10b981); transition: width 0.3s ease; }
+.pp .progress-bar-fill.indeterminate { width: 35% !important; transition: none; animation: pp-indeterminate 1.3s ease-in-out infinite; }
+@keyframes pp-indeterminate {from { transform: translateX(-100%); } to { transform: translateX(290%); }}
+.pp .progress-footer { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: 10px; color: #90b8e6; }
+.pp .progress-actions { display: inline-flex; gap: 6px; flex: none; }
+.pp .mini-action-btn { background: none; border: 1px solid rgba(16, 185, 129, 0.45); color: #10b981; border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.pp .mini-action-btn:hover { background: rgba(16, 185, 129, 0.18); }
+.pp .mini-action-blue { border-color: rgba(62, 166, 255, 0.5); color: #3ea6ff; }
+.pp .mini-action-blue:hover { background: rgba(62, 166, 255, 0.18); }
+@media (prefers-reduced-motion: reduce) { .pp .spinner {animation-duration: 1.8s;} .pp .progress-bar-fill.indeterminate {animation: none; width: 100% !important; opacity: 0.45;} }
+.pp .status-banner { padding: 8px 12px; border-radius: 6px; font-size: 12px; text-align: center; font-weight: 500; animation: pp-fadeIn 0.2s; }
+.pp .status-banner.info { background: rgba(62, 166, 255, 0.15); color: #3ea6ff; border: 1px solid rgba(62, 166, 255, 0.3); }
+.pp .status-banner.success { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+.pp .status-banner.error { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+.pp .session-card { background: #161616; border: 1px solid #2d2d2d; border-radius: 8px; padding: 9px 11px; transition: border-color 0.2s, box-shadow 0.2s; }
+.pp .session-card.attention { border-color: rgba(239, 68, 68, 0.6); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.15); }
+.pp .session-toggle { display: flex; align-items: flex-start; gap: 10px; cursor: pointer; }
+.pp .session-toggle input { position: absolute; opacity: 0; width: 0; height: 0; }
+.pp .switch { flex: none; position: relative; width: 30px; height: 17px; margin-top: 1px; border-radius: 999px; background: #3a3a3a; transition: background 0.15s; }
+.pp .switch::after { content: ""; position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; border-radius: 50%; background: #f1f1f1; transition: transform 0.15s; }
+.pp .session-toggle input:checked + .switch { background: #10b981; }
+.pp .session-toggle input:checked + .switch::after { transform: translateX(13px); }
+.pp .session-toggle input:focus-visible + .switch { outline: 2px solid #3ea6ff; outline-offset: 2px; }
+.pp .session-text { display: flex; flex-direction: column; gap: 2px; }
+.pp .session-title { font-size: 12px; font-weight: 600; color: #f1f1f1; }
+.pp .session-sub { font-size: 11px; color: #888888; line-height: 1.35; }
+.pp .download-section { display: flex; flex-direction: column; gap: 10px; }
+.pp .section-label { font-size: 11px; font-weight: 600; text-transform: uppercase; color: #888888; letter-spacing: 0.5px; }
+.pp .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.pp .dl-card { display: flex; align-items: center; justify-content: space-between; background: #1e1e1e; border: 1px solid #2d2d2d; border-radius: 8px; padding: 10px 12px; cursor: pointer; text-align: left; transition: all 0.15s ease; }
+.pp .dl-card:hover { background: #2a2a2a; border-color: #444; transform: translateY(-1px); }
+.pp .dl-card:active { transform: translateY(0); }
+.pp .dl-card .card-spinner { display: none; color: #3ea6ff; }
+.pp .dl-card.loading { border-color: #3ea6ff; background: #162238; }
+.pp .dl-card.loading .card-spinner { display: inline-block; }
+.pp .dl-card.loading .chip { display: none; }
+.pp .dl-card.busy { pointer-events: none; }
+.pp .dl-card.busy:not(.loading) { opacity: 0.45; }
+.pp .dl-card-content { display: flex; flex-direction: column; }
+.pp .dl-card-title { font-size: 12px; font-weight: 600; color: #ffffff; }
+.pp .dl-card-sub { font-size: 10px; color: #999999; margin-top: 2px; }
+.pp .chip { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; }
+.pp .chip-gold { background: #f59e0b; color: #000; }
+.pp .chip-blue { background: #0077ff; color: #fff; }
+.pp .chip-gray { background: #383838; color: #ddd; }
+.pp .chip-green { background: #10b981; color: #fff; }
+.pp .quick-tools { display: flex; gap: 6px; margin-top: 4px; }
+.pp .tool-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 5px; background: #1e1e1e; border: 1px solid #2d2d2d; color: #cccccc; font-size: 11px; font-weight: 500; padding: 7px 4px; border-radius: 6px; cursor: pointer; transition: background 0.15s, color 0.15s; }
+.pp .tool-btn:hover { background: #2a2a2a; color: #ffffff; }
+.pp .tool-btn svg { width: 14px; height: 14px; }
+.pp .empty-state { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 24px 16px; text-align: center; color: #777777; gap: 12px; }
+.pp .empty-icon { width: 44px; height: 44px; opacity: 0.6; }
+.pp .empty-state p { font-size: 12px; line-height: 1.5; }
+.pp .hidden { display: none !important; }
+@keyframes pp-fadeIn {from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); }}
+.pp .tabs-header { display: flex; background: #1a1a1a; border-radius: 8px; padding: 3px; gap: 4px; }
+.pp .tab-btn { flex: 1; display: flex; align-items: center; justify-content: center; gap: 6px; background: transparent; border: none; color: #888888; font-size: 11px; font-weight: 600; padding: 6px 10px; border-radius: 6px; cursor: pointer; transition: all 0.15s ease; }
+.pp .tab-btn:hover { color: #cccccc; }
+.pp .tab-btn.active { background: #2a2a2a; color: #ffffff; }
+.pp .tab-icon { width: 13px; height: 13px; }
+.pp .tab-badge { font-size: 9px; background: #10b981; color: #ffffff; padding: 1px 5px; border-radius: 10px; font-weight: 700; animation: pp-pulseGreen 1.6s infinite; }
+@keyframes pp-pulseGreen {0% { transform: scale(1); } 50% { transform: scale(1.15); } 100% { transform: scale(1); }}
+.pp .tab-view { display: flex; flex-direction: column; gap: 12px; }
+.pp .dl-card.disabled { opacity: 0.38 !important; cursor: not-allowed !important; pointer-events: none !important; background: #151515 !important; border-color: #222222 !important; }
+.pp .dl-card.disabled:hover { transform: none !important; background: #151515 !important; }
+.pp .chip-disabled { background: #282828 !important; color: #666666 !important; }
+.pp .tasks-section { display: flex; flex-direction: column; gap: 8px; }
+.pp .tasks-section-header { display: flex; justify-content: space-between; align-items: center; font-size: 11px; font-weight: 600; text-transform: uppercase; color: #888888; letter-spacing: 0.5px; }
+.pp .counter-chip { background: #222222; color: #10b981; font-size: 10px; padding: 1px 6px; border-radius: 10px; font-weight: 700; }
+.pp .text-action-btn { background: none; border: none; color: #888888; font-size: 11px; cursor: pointer; text-decoration: underline; padding: 0; }
+.pp .text-action-btn:hover { color: #ef4444; }
+.pp .tasks-list { display: flex; flex-direction: column; gap: 6px; max-height: 220px; overflow-y: auto; }
+.pp .tasks-empty-mini { font-size: 11px; color: #555555; text-align: center; padding: 14px 8px; background: #141414; border-radius: 8px; border: 1px dashed #222222; }
+.pp .task-card { display: flex; align-items: center; gap: 10px; background: #181818; border: 1px solid #262626; border-radius: 8px; padding: 8px 10px; transition: border-color 0.15s ease; }
+.pp .task-card:hover { border-color: #383838; }
+.pp .task-card-thumb { width: 52px; height: 32px; border-radius: 4px; object-fit: cover; background: #000; flex-shrink: 0; }
+.pp .task-card-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.pp .task-card-title { font-size: 11px; font-weight: 600; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pp .task-card-sub { font-size: 10px; color: #888888; display: flex; align-items: center; gap: 6px; }
+.pp .task-card-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+.pp .action-icon-btn { background: #242424; border: 1px solid #333333; color: #cccccc; border-radius: 6px; width: 26px; height: 26px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.15s ease; }
+.pp .action-icon-btn:hover { background: #333333; color: #ffffff; }
+.pp .action-icon-btn.danger:hover { background: rgba(239, 68, 68, 0.2); color: #ef4444; border-color: rgba(239, 68, 68, 0.4); }
+.pp .action-icon-btn svg { width: 13px; height: 13px; }
+.pp .mini-cancel-btn { background: none; border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444; border-radius: 4px; padding: 2px 8px; font-size: 10px; font-weight: 600; cursor: pointer; transition: background 0.15s; }
+.pp .mini-cancel-btn:hover { background: rgba(239, 68, 68, 0.2); }
+.pp .coffee-card { margin-top: 6px; padding-top: 10px; border-top: 1px solid #222222; }
+.pp .coffee-btn { display: flex; align-items: center; justify-content: center; gap: 8px; width: 100%; padding: 8px 12px; background: #ffdd00; color: #000000; text-decoration: none; border-radius: 8px; font-size: 11px; font-weight: 700; letter-spacing: 0.2px; transition: transform 0.15s ease, background 0.15s ease, box-shadow 0.15s ease; box-shadow: 0 2px 8px rgba(255, 221, 0, 0.2); box-sizing: border-box; }
+.pp .coffee-btn:hover { background: #ffea47; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(255, 221, 0, 0.35); }
+.pp .coffee-btn:active { transform: translateY(0); }
+.pp .coffee-icon { width: 15px; height: 15px; }
+/* ===== END generated replica CSS ===== */
+
+    /* ---------- Features ---------- */
+    .features { padding: 64px 0; border-top: 1px solid var(--border); }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap: 18px; }
+    @media (max-width: 480px) { .features-grid { grid-template-columns: 1fr; } }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; transition: transform .3s var(--ease), border-color .3s, background .3s; }
+    .card:hover { transform: translateY(-4px); border-color: var(--border-strong); background: rgba(27, 34, 54, 0.85); }
+    .card-icon { width: 48px; height: 48px; border-radius: 14px; display: grid; place-items: center; font-size: 1.45rem; margin-bottom: 16px; background: linear-gradient(160deg, rgba(255,255,255,0.08), rgba(255,255,255,0.02)); border: 1px solid var(--border); }
+    .card h3 { font-size: 1.12rem; font-weight: 700; margin-bottom: 6px; }
+    .card p { color: var(--text-muted); font-size: 0.94rem; }
+
+    /* ---------- FAQ ---------- */
+    .faq { padding: 64px 0; border-top: 1px solid var(--border); }
+    .faq-list { max-width: 780px; margin: 0 auto; display: flex; flex-direction: column; gap: 10px; }
+    details { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; transition: border-color .2s, background .2s; }
+    details[open] { border-color: var(--border-strong); background: rgba(27, 34, 54, 0.85); }
+    summary { cursor: pointer; list-style: none; padding: 18px 22px; font-weight: 700; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    summary::-webkit-details-marker { display: none; }
+    summary::after { content: "+"; font-size: 1.4rem; font-weight: 500; color: var(--text-muted); transition: transform .25s var(--ease); flex-shrink: 0; }
+    details[open] summary::after { transform: rotate(45deg); color: var(--accent-2); }
+    details .ans { padding: 0 22px 20px; color: var(--text-muted); font-size: 0.95rem; }
+    .faq-tag { font-family: var(--mono); font-size: 0.7rem; font-weight: 700; padding: 2px 8px; border-radius: 6px; margin-right: 10px; vertical-align: 2px; }
+    .faq-tag.fix { background: var(--amber-soft); color: var(--amber); border: 1px solid rgba(245,158,11,.3); }
+
+    /* ---------- Final CTA + footer ---------- */
+    .final { padding: 0 0 72px; }
+    .final-box { text-align: center; padding: 48px 24px; border-radius: 28px; background: radial-gradient(ellipse at 50% 0%, rgba(255,0,51,0.25), transparent 70%), var(--bg-2); border: 1px solid rgba(255,0,51,0.25); }
+    .final-box h2 { font-size: clamp(1.6rem, 3.4vw, 2.3rem); font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+    .final-box p { color: var(--text-muted); margin-bottom: 26px; }
+    footer { padding: 32px 0 40px; border-top: 1px solid var(--border); text-align: center; color: var(--text-dim); font-size: 0.88rem; }
+    footer a { color: var(--accent-2); text-decoration: none; }
+    footer p + p { margin-top: 6px; }
+
+    /* Toast */
+    .toast { position: fixed; left: 50%; bottom: 24px; transform: translate(-50%, calc(100% + 40px)); visibility: hidden; z-index: 90; background: #fff; color: #0b0f19; padding: 12px 18px; border-radius: 14px; font-weight: 700; font-size: 0.92rem; box-shadow: 0 16px 40px rgba(0,0,0,.45); transition: transform .4s var(--ease), visibility .4s; max-width: calc(100% - 32px); text-align: center; }
+    .toast.show { transform: translate(-50%, 0); visibility: visible; }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation: none !important; transition: none !important; }
+      html { scroll-behavior: auto; }
+      .omnibox .typed { width: auto; border-right: 0; }
+      .unzip .file:last-child, .ext-card.new, .pin-pop { opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="container nav">
+      <a href="#" class="logo">
+        <img src="/icon.png" alt="" data-fallback-icon>
+        <span>YT Downloader</span>
+      </a>
+      <nav class="nav-actions">
+        <a href="#setup" class="nav-link">Setup</a>
+        <a href="#guide" class="nav-link">Guide</a>
+        <a href="#features" class="nav-link">Features</a>
+        <a href="#faq" class="nav-link">Help</a>
+        <a href="/download" class="btn btn-primary btn-sm" data-download>⬇ Get it free</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= HERO ================= -->
+    <section class="hero">
+      <div class="container">
+        <img src="/icon.png" alt="YT Downloader icon" class="hero-icon" data-fallback-icon>
+        <div class="pill"><span class="pill-dot"></span>Free • No ads • No sign-up</div>
+        <h1>Save any YouTube video<br>in <span class="grad">4K, 1080p or MP3</span></h1>
+        <p class="hero-sub">Open the extension on any YouTube video, pick a quality, and the file lands in your Downloads folder. Setup takes about a minute.</p>
+
+        <div class="hero-cta">
+          <a href="/download" class="btn btn-primary btn-lg" data-download>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12m0 0l-5-5m5 5l5-5M5 21h14"/></svg>
+            Download Extension
+          </a>
+          <a href="#setup" class="btn btn-ghost btn-lg">See the 3 steps</a>
+        </div>
+        <div class="cta-meta">
+          <span>~30 KB ZIP</span>
+          <span id="meta-browser">Chrome, Edge, Brave &amp; Opera</span>
+          <span>Mac, Windows, Linux</span>
+        </div>
+
+        <div class="stats">
+          <div class="stat"><b>4K</b><small>Ultra HD video</small></div>
+          <div class="stat"><b>320k</b><small>MP3 audio</small></div>
+          <div class="stat"><b>0</b><small>Ads or trackers</small></div>
+          <div class="stat"><b>~60s</b><small>One-time setup</small></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SETUP WIZARD ================= -->
+    <section class="setup" id="setup">
+      <div class="container">
+        <div class="eyebrow">Instant setup</div>
+        <h2 class="section-title">Up and running in 3 easy steps</h2>
+        <p class="section-desc">No technical skills needed. Follow along — we'll tick each step off as you go.</p>
+
+        <div class="browser-warn" id="browser-warn">
+          ⚠️ This extension works in <b>Chrome, Edge, Brave or Opera</b>. You seem to be using a different browser — open this page in one of those to install it.
+        </div>
+
+        <div class="wizard" id="wizard">
+          <div class="stepper" role="tablist" aria-label="Setup steps">
+            <div class="stepper-track"><div class="stepper-fill" id="stepper-fill"></div></div>
+            <button class="step-tab" role="tab" data-go="1"><span class="step-dot">1</span><span class="step-label">Download &amp; unzip</span></button>
+            <button class="step-tab" role="tab" data-go="2"><span class="step-dot">2</span><span class="step-label">Turn on Developer mode</span></button>
+            <button class="step-tab" role="tab" data-go="3"><span class="step-dot">3</span><span class="step-label">Load &amp; pin</span></button>
+          </div>
+
+          <!-- STEP 1 -->
+          <div class="panel" data-panel="1" role="tabpanel">
+            <div class="panel-body">
+              <div class="panel-kicker">STEP 1 OF 3</div>
+              <h3>Download &amp; unzip <span class="time-chip">⏱ 15 sec</span></h3>
+              <p class="panel-lead">Grab the extension file and open it up.</p>
+
+              <ul class="todo">
+                <li>
+                  <span class="n">a</span>
+                  <p>Click the button below to download the ZIP.
+                    <a href="/download" class="btn btn-primary btn-sm" data-download style="margin-top:10px; white-space:normal;">⬇ Download the ZIP</a>
+                  </p>
+                </li>
+                <li>
+                  <span class="n">b</span>
+                  <p id="unzip-text">Open your <b>Downloads</b> folder and unzip the file.</p>
+                </li>
+              </ul>
+
+              <div class="callout callout-ok" id="dl-ok"><span class="ic">✅</span><span><b>Download started!</b> Once it finishes, unzip it and hit “Next”.</span></div>
+              <div class="callout callout-tip"><span class="ic">💡</span><span><b>Tip:</b> Move the unzipped folder somewhere it won't get deleted, like <b>Documents</b>. Chrome loads the extension from that folder.</span></div>
+
+              <div class="panel-nav">
+                <span></span>
+                <button class="btn btn-primary" data-next>I've unzipped it — Next →</button>
+              </div>
+            </div>
+            <div class="visual" aria-hidden="true">
+              <div class="unzip">
+                <div class="file"><div class="file-ic zip"></div><div class="file-name">YT_downloader_chromeExt.zip</div></div>
+                <div class="arrow-anim">➜</div>
+                <div class="file"><div class="file-ic folder"></div><div class="file-name">YT_downloader_chromeExt</div></div>
+              </div>
+              <div class="visual-caption" id="unzip-caption">Double-click the ZIP to unzip</div>
+            </div>
+          </div>
+
+          <!-- STEP 2 -->
+          <div class="panel" data-panel="2" role="tabpanel">
+            <div class="panel-body">
+              <div class="panel-kicker">STEP 2 OF 3</div>
+              <h3>Turn on Developer mode <span class="time-chip">⏱ 20 sec</span></h3>
+              <p class="panel-lead">This unlocks the option to add extensions from a folder.</p>
+
+              <ul class="todo">
+                <li>
+                  <span class="n">a</span>
+                  <p>Copy this address:
+                    <span class="copy-row">
+                      <span class="copy-field" id="ext-url">chrome://extensions</span>
+                      <button class="copy-btn" id="copy-btn" type="button">Copy</button>
+                    </span>
+                  </p>
+                </li>
+                <li>
+                  <span class="n">b</span>
+                  <p>Open a new tab with <kbd id="kbd-newtab">Ctrl</kbd> + <kbd>T</kbd>, paste it into the address bar, and press <kbd>Enter</kbd>.
+                    <small>Browsers don't let websites open this page for you, so a quick copy-paste is needed.</small>
+                  </p>
+                </li>
+                <li>
+                  <span class="n">c</span>
+                  <p>Flip the <span class="ui-word">Developer mode</span> switch in the <b>top-right corner</b> so it turns blue.</p>
+                </li>
+              </ul>
+
+              <div class="panel-nav">
+                <button class="back" data-prev>← Back</button>
+                <button class="btn btn-primary" data-next>Developer mode is on — Next →</button>
+              </div>
+            </div>
+            <div class="visual" aria-hidden="true">
+              <div class="browser">
+                <div class="browser-bar">
+                  <div class="dots"><i></i><i></i><i></i></div>
+                  <div class="omnibox"><span class="typed" id="omni-typed">chrome://extensions</span></div>
+                </div>
+                <div class="ext-head">
+                  <h5>Extensions</h5>
+                  <div class="dev-toggle anim-toggle"><span class="ring"></span>Developer mode <span class="switch"></span></div>
+                </div>
+                <div class="ext-actions">
+                  <span class="ext-btn dim">Load unpacked</span><span class="ext-btn dim">Pack extension</span>
+                </div>
+                <div class="ext-body"><div class="ext-placeholder"></div><div class="ext-placeholder"></div></div>
+              </div>
+              <div class="visual-caption">Top-right corner → flip the switch</div>
+            </div>
+          </div>
+
+          <!-- STEP 3 -->
+          <div class="panel" data-panel="3" role="tabpanel">
+            <div class="panel-body">
+              <div class="panel-kicker">STEP 3 OF 3</div>
+              <h3>Load it &amp; pin it <span class="time-chip">⏱ 20 sec</span></h3>
+              <p class="panel-lead">Point the browser at the folder you unzipped.</p>
+
+              <ul class="todo">
+                <li>
+                  <span class="n">a</span>
+                  <p>Click <span class="ui-word">Load unpacked</span> in the top-left.</p>
+                </li>
+                <li>
+                  <span class="n">b</span>
+                  <p>Choose the <b class="mono" style="font-size:.9em">YT_downloader_chromeExt</b> folder and click <span class="ui-word">Select</span>.
+                    <small>Pick the folder itself — not the .zip file.</small>
+                  </p>
+                </li>
+                <li>
+                  <span class="n">c</span>
+                  <p>Click the puzzle piece 🧩 in the toolbar, then the pin 📌 next to <b>YouTube Video Downloader</b>.</p>
+                </li>
+              </ul>
+
+              <div class="callout callout-warn"><span class="ic">🛟</span><span><b>See “Manifest file is missing”?</b> You picked the wrong folder. Open the unzipped folder and select the one inside that contains <code>manifest.json</code>.</span></div>
+
+              <div class="panel-nav">
+                <button class="back" data-prev>← Back</button>
+                <button class="btn btn-primary" data-finish>It's installed — Finish ✓</button>
+              </div>
+            </div>
+            <div class="visual" aria-hidden="true">
+              <div class="browser-wrap">
+                <div class="browser">
+                  <div class="browser-bar">
+                    <div class="dots"><i></i><i></i><i></i></div>
+                    <div class="omnibox">chrome://extensions</div>
+                    <span class="tb-ic">🧩</span>
+                  </div>
+                  <div class="ext-head">
+                    <h5>Extensions</h5>
+                    <div class="dev-toggle">Developer mode <span class="switch on"></span></div>
+                  </div>
+                  <div class="ext-actions">
+                    <span class="ext-btn"><span class="ring"></span>Load unpacked</span><span class="ext-btn dim">Pack extension</span>
+                  </div>
+                  <div class="ext-body">
+                    <div class="ext-card new">
+                      <img src="/icon.png" alt="" data-fallback-icon>
+                      <div><b>YouTube Video Downloader</b><small>4K, 1080p, MP3 &amp; thumbnails</small></div>
+                      <span class="switch"></span>
+                    </div>
+                    <div class="ext-placeholder"></div>
+                  </div>
+                </div>
+                <div class="pin-pop">
+                  <div><img src="/icon.png" alt="" data-fallback-icon>YT Downloader<span class="pin">📌</span></div>
+                  <div style="opacity:.5">Other extension</div>
+                </div>
+              </div>
+              <div class="visual-caption">Load unpacked → pick folder → pin it</div>
+            </div>
+          </div>
+
+          <!-- DONE -->
+          <div class="panel" data-panel="4" role="tabpanel">
+            <div class="done-panel" style="grid-column: 1 / -1;">
+              <div class="done-badge">✓</div>
+              <h3>You're all set! 🎉</h3>
+              <p>Open any YouTube video and click the <b>YT Downloader</b> icon in your toolbar. The video loads in the popup, ready to download.</p>
+              <div class="done-actions">
+                <a href="https://www.youtube.com/" target="_blank" rel="noopener" class="btn btn-primary">▶ Try it on YouTube</a>
+                <a href="https://buymeacoffee.com/chriswenfeng" target="_blank" rel="noopener" class="btn btn-coffee">☕ Buy me a coffee</a>
+              </div>
+              <button class="restart" data-restart>Start setup over</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= HOW TO USE ================= -->
+    <!-- Mock-ups below are built from the extension's real popup markup (popup/popup.html)
+         and styled by the generated replica CSS. -->
+    <section class="howto" id="guide">
+      <div class="container">
+        <div class="eyebrow">How to use</div>
+        <h2 class="section-title">Your first download in 3 easy steps</h2>
+        <p class="section-desc">Everything happens in the extension popup, one click away in your toolbar.</p>
+
+        <div class="wizard" id="howto">
+          <div class="stepper" role="tablist" aria-label="How to use">
+            <div class="stepper-track"><div class="stepper-fill" data-fill></div></div>
+            <button class="step-tab" role="tab" data-go="1"><span class="step-dot">1</span><span class="step-label">Open the popup</span></button>
+            <button class="step-tab" role="tab" data-go="2"><span class="step-dot">2</span><span class="step-label">Pick a format</span></button>
+            <button class="step-tab" role="tab" data-go="3"><span class="step-dot">3</span><span class="step-label">Follow progress</span></button>
+            <button class="step-tab optional" role="tab" data-go="4"><span class="step-dot">?</span><span class="step-label">If YouTube asks</span></button>
+          </div>
+
+          <div class="panel" data-panel="1" role="tabpanel">
+            <div class="panel-body">
+              <div class="panel-kicker">STEP 1 OF 3</div>
+              <h3>Open the popup <span class="time-chip">⏱ 5 sec</span></h3>
+              <p class="panel-lead">Start on the YouTube video you want.</p>
+              <ul class="todo">
+                <li><span class="n">a</span><p>Open any YouTube video or Short.</p></li>
+                <li><span class="n">b</span><p>Click the <b>YT Downloader</b> icon in your toolbar.
+                  <small>Don't see it? Click the puzzle piece 🧩 and pin it 📌.</small></p></li>
+                <li><span class="n">c</span><p>The video loads by itself, and the badge says <span class="ui-word">⚡ Cloud Engine Online</span>.
+                  <small>Not on the video page? Paste any YouTube link and click <b>Load</b>.</small></p></li>
+              </ul>
+              <div class="panel-nav">
+                <span></span>
+                <button class="btn btn-primary" data-next>Next →</button>
+              </div>
+            </div>
+            <div class="visual visual-tall" aria-hidden="true">
+              <div class="pp-scene"><div class="browser-bar pp-toolbar"><div class="dots"><i></i><i></i><i></i></div><div class="omnibox">youtube.com/watch?v=aqz-KE-bpKQ</div><span class="tb-ic">🧩</span><span class="tb-ic pp-ours"><span class="ring"></span><img src="/icon.png" alt="" data-fallback-icon></span></div><div class="pp-window crop" inert><div class="pp"><div class="app-container"><header class="app-header">
+      <div class="brand">
+        <svg class="yt-icon" viewBox="0 0 24 24">
+          <path fill="#FF0033" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span class="brand-title">YT Downloader</span>
+      </div>
+      <div class="header-actions">
+        <span class="badge badge-connected">⚡ Cloud Engine Online</span>
+      </div>
+    </header><div class="tabs-header">
+      <button class="tab-btn active">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        <span>Downloader</span>
+      </button>
+      <button class="tab-btn">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <span>Tasks</span>
+        <span class="tab-badge hidden">0</span>
+      </button>
+    </div><div class="url-input-container">
+        <input tabindex="-1" type="text" placeholder="Paste YouTube link or Shorts URL..." />
+        <button class="btn btn-secondary">Load</button>
+      </div><div class="session-card">
+        <label class="session-toggle">
+          <input tabindex="-1" type="checkbox" />
+          <span class="switch" aria-hidden="true"></span>
+          <span class="session-text">
+            <span class="session-title">Use my YouTube session</span>
+            <span class="session-sub">Only needed if YouTube shows a bot check. Sends just your YouTube login cookies, over HTTPS, and the server deletes them right after each download.</span>
+          </span>
+        </label>
+      </div><div class="video-card">
+        <div class="thumbnail-wrapper">
+          <div class="pp-thumb"></div>
+          <span class="thumbnail-badge">YouTube</span>
+        </div>
+        <div class="video-info">
+          <h3>Big Buck Bunny | 4K Open Movie</h3>
+          <p>Blender Studio</p>
+        </div>
+      </div><div class="download-section">
+        <div class="section-label">Select Format</div>
+
+        <div class="options-grid">
+          
+          <button class="dl-card" data-quality="4k">
+            <div class="dl-card-content">
+              <span class="dl-card-title">4K Ultra HD</span>
+              <span class="dl-card-sub">2160p · VLC, not QuickTime</span>
+            </div>
+            <span class="chip chip-gold">4K</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="1080p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">1080p Full HD</span>
+              <span class="dl-card-sub">High Quality MP4</span>
+            </div>
+            <span class="chip chip-blue">1080p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="720p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">720p HD</span>
+              <span class="dl-card-sub">Fast Download</span>
+            </div>
+            <span class="chip chip-gray">720p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="360p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">360p Fast</span>
+              <span class="dl-card-sub">Small File</span>
+            </div>
+            <span class="chip chip-gray">360p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="mp3" style="grid-column: span 2;">
+            <div class="dl-card-content">
+              <span class="dl-card-title">320kbps MP3 Audio</span>
+              <span class="dl-card-sub">High Definition Sound Track</span>
+            </div>
+            <span class="chip chip-green">MP3</span>
+          </button>
+        </div>
+
+        
+        <div class="quick-tools">
+          <button class="tool-btn" title="Save MaxRes Thumbnail">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            Thumbnail
+          </button>
+          <button class="tool-btn" title="Open Downloads Folder">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+            Downloads
+          </button>
+          <button class="tool-btn" title="Copy CLI Command">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 2h-14c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 14l-4-4 1.41-1.41L12 13.17l5.59-5.59L19 9l-7 7z"/></svg>
+            yt-dlp
+          </button>
+        </div>
+      </div></div></div></div></div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="2" role="tabpanel">
+            <div class="panel-body">
+              <div class="panel-kicker">STEP 2 OF 3</div>
+              <h3>Pick a format <span class="time-chip">⏱ 2 sec</span></h3>
+              <p class="panel-lead">One click starts the download.</p>
+              <ul class="todo">
+                <li><span class="n">a</span><p>Under <b>Select Format</b>, click a card: <b>4K Ultra HD</b>, <b>1080p Full HD</b>, <b>720p HD</b>, <b>360p Fast</b> or <b>320kbps MP3 Audio</b>.</p></li>
+                <li><span class="n">b</span><p>The card you clicked shows a spinner while your download gets ready.
+                  <small>4K is greyed out when the video doesn't have it. 4K files play in VLC or a browser; QuickTime may not open them.</small></p></li>
+                <li><span class="n">c</span><p>The bottom row saves the <b>Thumbnail</b>, opens your <b>Downloads</b> folder, or copies a <b>yt-dlp</b> command.</p></li>
+              </ul>
+              <div class="panel-nav">
+                <button class="back" data-prev>← Back</button>
+                <button class="btn btn-primary" data-next>Next →</button>
+              </div>
+            </div>
+            <div class="visual visual-tall" aria-hidden="true">
+              <div class="pp-window crop" inert><div class="pp"><div class="app-container"><header class="app-header">
+      <div class="brand">
+        <svg class="yt-icon" viewBox="0 0 24 24">
+          <path fill="#FF0033" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span class="brand-title">YT Downloader</span>
+      </div>
+      <div class="header-actions">
+        <span class="badge badge-connected">⚡ Cloud Engine Online</span>
+      </div>
+    </header><div class="tabs-header">
+      <button class="tab-btn active">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        <span>Downloader</span>
+      </button>
+      <button class="tab-btn">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <span>Tasks</span>
+        <span class="tab-badge hidden">0</span>
+      </button>
+    </div><div class="url-input-container">
+        <input tabindex="-1" type="text" placeholder="Paste YouTube link or Shorts URL..." />
+        <button class="btn btn-secondary">Load</button>
+      </div><div class="session-card">
+        <label class="session-toggle">
+          <input tabindex="-1" type="checkbox" />
+          <span class="switch" aria-hidden="true"></span>
+          <span class="session-text">
+            <span class="session-title">Use my YouTube session</span>
+            <span class="session-sub">Only needed if YouTube shows a bot check. Sends just your YouTube login cookies, over HTTPS, and the server deletes them right after each download.</span>
+          </span>
+        </label>
+      </div><div class="video-card">
+        <div class="thumbnail-wrapper">
+          <div class="pp-thumb"></div>
+          <span class="thumbnail-badge">YouTube</span>
+        </div>
+        <div class="video-info">
+          <h3>Big Buck Bunny | 4K Open Movie</h3>
+          <p>Blender Studio</p>
+        </div>
+      </div><div class="download-section">
+        <div class="section-label">Select Format</div>
+
+        <div class="options-grid">
+          
+          <button class="dl-card" data-quality="4k">
+            <div class="dl-card-content">
+              <span class="dl-card-title">4K Ultra HD</span>
+              <span class="dl-card-sub">2160p · VLC, not QuickTime</span>
+            </div>
+            <span class="chip chip-gold">4K</span>
+          </button>
+
+          
+          <button class="dl-card pp-target" data-quality="1080p"><span class="ring"></span>
+            <div class="dl-card-content">
+              <span class="dl-card-title">1080p Full HD</span>
+              <span class="dl-card-sub">High Quality MP4</span>
+            </div>
+            <span class="chip chip-blue">1080p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="720p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">720p HD</span>
+              <span class="dl-card-sub">Fast Download</span>
+            </div>
+            <span class="chip chip-gray">720p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="360p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">360p Fast</span>
+              <span class="dl-card-sub">Small File</span>
+            </div>
+            <span class="chip chip-gray">360p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="mp3" style="grid-column: span 2;">
+            <div class="dl-card-content">
+              <span class="dl-card-title">320kbps MP3 Audio</span>
+              <span class="dl-card-sub">High Definition Sound Track</span>
+            </div>
+            <span class="chip chip-green">MP3</span>
+          </button>
+        </div>
+
+        
+        <div class="quick-tools">
+          <button class="tool-btn" title="Save MaxRes Thumbnail">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            Thumbnail
+          </button>
+          <button class="tool-btn" title="Open Downloads Folder">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+            Downloads
+          </button>
+          <button class="tool-btn" title="Copy CLI Command">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 2h-14c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 14l-4-4 1.41-1.41L12 13.17l5.59-5.59L19 9l-7 7z"/></svg>
+            yt-dlp
+          </button>
+        </div>
+      </div></div></div></div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="3" role="tabpanel">
+            <div class="panel-body">
+              <div class="panel-kicker">STEP 3 OF 3</div>
+              <h3>Follow progress <span class="time-chip">⏱ 10–30 sec to start</span></h3>
+              <p class="panel-lead">A card under the video shows exactly where your download is.</p>
+              <ul class="todo">
+                <li><span class="n">a</span><p><b>Preparing…</b> while our server checks the video, usually 10–30 seconds.</p></li>
+                <li><span class="n">b</span><p><b>Downloading</b> as the file streams in. If your browser asks what to do with it, choose <span class="ui-word">Save</span>.
+                  <small>No question showing once it reaches <b>Saving…</b>? Click <b>Open downloads</b> on the card.</small></p></li>
+                <li><span class="n">c</span><p><b>✓ Saved to Downloads</b>. Click <span class="ui-word">Show in folder</span> to find it. Past downloads stay in the <b>Tasks</b> tab.</p></li>
+              </ul>
+              <div class="panel-nav">
+                <button class="back" data-prev>← Back</button>
+                <a href="https://www.youtube.com/" target="_blank" rel="noopener" class="btn btn-primary">▶ Try it on YouTube</a>
+              </div>
+            </div>
+            <div class="visual visual-tall" aria-hidden="true">
+              <div class="pp-window crop" inert><div class="pp"><div class="app-container"><header class="app-header">
+      <div class="brand">
+        <svg class="yt-icon" viewBox="0 0 24 24">
+          <path fill="#FF0033" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span class="brand-title">YT Downloader</span>
+      </div>
+      <div class="header-actions">
+        <span class="badge badge-connected">⚡ Cloud Engine Online</span>
+      </div>
+    </header><div class="tabs-header">
+      <button class="tab-btn active">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        <span>Downloader</span>
+      </button>
+      <button class="tab-btn">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <span>Tasks</span>
+        <span class="tab-badge hidden">0</span>
+      </button>
+    </div><div class="url-input-container">
+        <input tabindex="-1" type="text" placeholder="Paste YouTube link or Shorts URL..." />
+        <button class="btn btn-secondary">Load</button>
+      </div><div class="session-card">
+        <label class="session-toggle">
+          <input tabindex="-1" type="checkbox" checked />
+          <span class="switch" aria-hidden="true"></span>
+          <span class="session-text">
+            <span class="session-title">Use my YouTube session</span>
+            <span class="session-sub">Only needed if YouTube shows a bot check. Sends just your YouTube login cookies, over HTTPS, and the server deletes them right after each download.</span>
+          </span>
+        </label>
+      </div><div class="video-card">
+        <div class="thumbnail-wrapper">
+          <div class="pp-thumb"></div>
+          <span class="thumbnail-badge">YouTube</span>
+        </div>
+        <div class="video-info">
+          <h3>Big Buck Bunny | 4K Open Movie</h3>
+          <p>Blender Studio</p>
+        </div>
+      </div><div class="pp-stack"><div class="progress-card"><div class="progress-header"><span class="progress-title"><span class="spinner"></span><span>Preparing 1080P…</span></span><span></span></div><div class="progress-file">Big Buck Bunny | 4K Open Movie</div><div class="progress-bar-bg"><div class="progress-bar-fill indeterminate"></div></div><div class="progress-footer"><span>Checking the video on the server (usually 10–30 seconds)</span><span class="progress-actions"></span></div></div><div class="progress-card"><div class="progress-header"><span class="progress-title"><span class="spinner"></span><span>Downloading 1080P</span></span><span></span></div><div class="progress-file">Big Buck Bunny | 4K Open Movie</div><div class="progress-bar-bg"><div class="progress-bar-fill indeterminate"></div></div><div class="progress-footer"><span>21.3 MB received</span><span class="progress-actions"><button class="mini-cancel-btn">Cancel</button></span></div></div><div class="progress-card is-done"><div class="progress-header"><span class="progress-title"><span>✓ Saved to Downloads</span></span><span>100%</span></div><div class="progress-file">Big Buck Bunny | 4K Open Movie</div><div class="progress-bar-bg"><div class="progress-bar-fill" style="width:100%"></div></div><div class="progress-footer"><span>47.2 MB</span><span class="progress-actions"><button class="mini-action-btn pp-target"><span class="ring"></span>Show in folder</button></span></div></div></div><div class="download-section">
+        <div class="section-label">Select Format</div>
+
+        <div class="options-grid">
+          
+          <button class="dl-card" data-quality="4k">
+            <div class="dl-card-content">
+              <span class="dl-card-title">4K Ultra HD</span>
+              <span class="dl-card-sub">2160p · VLC, not QuickTime</span>
+            </div>
+            <span class="chip chip-gold">4K</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="1080p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">1080p Full HD</span>
+              <span class="dl-card-sub">High Quality MP4</span>
+            </div>
+            <span class="chip chip-blue">1080p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="720p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">720p HD</span>
+              <span class="dl-card-sub">Fast Download</span>
+            </div>
+            <span class="chip chip-gray">720p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="360p">
+            <div class="dl-card-content">
+              <span class="dl-card-title">360p Fast</span>
+              <span class="dl-card-sub">Small File</span>
+            </div>
+            <span class="chip chip-gray">360p</span>
+          </button>
+
+          
+          <button class="dl-card" data-quality="mp3" style="grid-column: span 2;">
+            <div class="dl-card-content">
+              <span class="dl-card-title">320kbps MP3 Audio</span>
+              <span class="dl-card-sub">High Definition Sound Track</span>
+            </div>
+            <span class="chip chip-green">MP3</span>
+          </button>
+        </div>
+
+        
+        <div class="quick-tools">
+          <button class="tool-btn" title="Save MaxRes Thumbnail">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+            Thumbnail
+          </button>
+          <button class="tool-btn" title="Open Downloads Folder">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M10 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2h-8l-2-2z"/></svg>
+            Downloads
+          </button>
+          <button class="tool-btn" title="Copy CLI Command">
+            <svg viewBox="0 0 24 24"><path fill="currentColor" d="M19 2h-14c-1.11 0-2 .9-2 2v16c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-7 14l-4-4 1.41-1.41L12 13.17l5.59-5.59L19 9l-7 7z"/></svg>
+            yt-dlp
+          </button>
+        </div>
+      </div></div></div></div>
+            </div>
+          </div>
+
+          <div class="panel" data-panel="4" role="tabpanel">
+            <div class="panel-body">
+              <div class="panel-kicker">ONLY IF NEEDED</div>
+              <h3>If YouTube asks you to sign in</h3>
+              <p class="panel-lead">Sometimes the download stops with “YouTube is asking for a sign-in check”. Here's the fix.</p>
+              <ul class="todo">
+                <li><span class="n">a</span><p>In the popup, switch on <span class="ui-word">Use my YouTube session</span>.</p></li>
+                <li><span class="n">b</span><p>If your browser asks for permission, click <span class="ui-word">Allow</span>.</p></li>
+                <li><span class="n">c</span><p>Make sure you're signed in to YouTube in this browser, then pick your format again.</p></li>
+              </ul>
+              <div class="callout callout-tip"><span class="ic">🔒</span><span><b>What's shared:</b> only your YouTube login cookies, only over an encrypted (HTTPS) connection. The server uses them once to check the video, then deletes them right away; they're never saved or logged. It's off by default, and switching it off removes the permission.</span></div>
+              <div class="panel-nav">
+                <button class="back" data-prev>← Back</button>
+                <button class="btn btn-primary" data-restart>↺ Start over</button>
+              </div>
+            </div>
+            <div class="visual visual-tall" aria-hidden="true">
+              <div class="pp-window crop" inert><div class="pp"><div class="app-container"><header class="app-header">
+      <div class="brand">
+        <svg class="yt-icon" viewBox="0 0 24 24">
+          <path fill="#FF0033" d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+        </svg>
+        <span class="brand-title">YT Downloader</span>
+      </div>
+      <div class="header-actions">
+        <span class="badge badge-connected">⚡ Cloud Engine Online</span>
+      </div>
+    </header><div class="tabs-header">
+      <button class="tab-btn active">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM17 13l-5 5-5-5h3V9h4v4h3z"/></svg>
+        <span>Downloader</span>
+      </button>
+      <button class="tab-btn">
+        <svg viewBox="0 0 24 24" class="tab-icon"><path fill="currentColor" d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-5 14H7v-2h7v2zm3-4H7v-2h10v2zm0-4H7V7h10v2z"/></svg>
+        <span>Tasks</span>
+        <span class="tab-badge hidden">0</span>
+      </button>
+    </div><div class="url-input-container">
+        <input tabindex="-1" type="text" placeholder="Paste YouTube link or Shorts URL..." />
+        <button class="btn btn-secondary">Load</button>
+      </div><div class="session-card pp-demo">
+        <label class="session-toggle">
+          <input tabindex="-1" type="checkbox" />
+          <span class="switch" aria-hidden="true"></span>
+          <span class="session-text">
+            <span class="session-title">Use my YouTube session</span>
+            <span class="session-sub">Only needed if YouTube shows a bot check. Sends just your YouTube login cookies, over HTTPS, and the server deletes them right after each download.</span>
+          </span>
+        </label>
+      </div><div class="video-card">
+        <div class="thumbnail-wrapper">
+          <div class="pp-thumb"></div>
+          <span class="thumbnail-badge">YouTube</span>
+        </div>
+        <div class="video-info">
+          <h3>Big Buck Bunny | 4K Open Movie</h3>
+          <p>Blender Studio</p>
+        </div>
+      </div></div></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FEATURES ================= -->
+    <section class="features" id="features">
+      <div class="container">
+        <div class="eyebrow">Why people love it</div>
+        <h2 class="section-title">Everything you need, nothing you don't</h2>
+        <p class="section-desc">Fast, clean, and built right into YouTube.</p>
+
+        <div class="features-grid">
+          <div class="card"><div class="card-icon">🎬</div><h3>Crisp 4K &amp; 1080p</h3><p>Full-resolution video up to 4K, with audio and video merged automatically into one MP4. 1080p plays anywhere; 4K files use VP9/AV1, so open them in VLC or a browser rather than QuickTime.</p></div>
+          <div class="card"><div class="card-icon">🎵</div><h3>High-quality MP3</h3><p>Pull the audio from podcasts, music and talks at 320 kbps with a single click.</p></div>
+          <div class="card"><div class="card-icon">⚡</div><h3>One click from your toolbar</h3><p>Open the popup on any YouTube video and it's already loaded. No copy-pasting links.</p></div>
+          <div class="card"><div class="card-icon">📊</div><h3>Download tracker</h3><p>See progress and history in the popup, even after closing and reopening it.</p></div>
+          <div class="card"><div class="card-icon">🛡️</div><h3>No ads, no trackers</h3><p>No sketchy redirects, pop-ups, or third-party converter sites. Ever.</p></div>
+          <div class="card"><div class="card-icon">💻</div><h3>Works everywhere</h3><p>macOS, Windows, Linux and ChromeOS, on Chrome, Edge, Brave and Opera.</p></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FAQ ================= -->
+    <section class="faq" id="faq">
+      <div class="container">
+        <div class="eyebrow">Help</div>
+        <h2 class="section-title">Questions &amp; quick fixes</h2>
+        <p class="section-desc">Stuck on a step? The answer is probably here.</p>
+
+        <div class="faq-list">
+          <details>
+            <summary><span><span class="faq-tag fix">FIX</span>“Manifest file is missing or unreadable”</span></summary>
+            <div class="ans">You selected the ZIP file or the wrong folder. Unzip first, then in <b>Load unpacked</b> pick the folder that directly contains <code>manifest.json</code>. Sometimes unzipping creates a folder inside a folder — choose the inner one.</div>
+          </details>
+          <details>
+            <summary><span><span class="faq-tag fix">FIX</span>I can't find the “Load unpacked” button</span></summary>
+            <div class="ans">It only appears after <b>Developer mode</b> is switched on (top-right of the extensions page). Once it's on, the button shows up in the top-left.</div>
+          </details>
+          <details>
+            <summary><span><span class="faq-tag fix">FIX</span>The popup doesn't show my video</span></summary>
+            <div class="ans">Refresh the YouTube tab after installing (tabs opened before setup don't know about the extension yet), then open the popup again. You can always paste the video's link into the popup and click <b>Load</b>. Also check the extension's switch is on at the extensions page.</div>
+          </details>
+          <details>
+            <summary><span><span class="faq-tag fix">FIX</span>It stopped working after I moved or deleted the folder</span></summary>
+            <div class="ans">The browser loads the extension from that folder every time. Put the folder back (or download again), then click <b>Load unpacked</b> once more.</div>
+          </details>
+          <details>
+            <summary><span><span class="faq-tag fix">FIX</span>“YouTube is asking for a sign-in check”</span></summary>
+            <div class="ans">YouTube wants proof you're a real viewer. Open the extension popup, turn on <b>Use my YouTube session</b>, click <b>Allow</b>, and make sure you're signed in to YouTube in this browser. Then try again. See <a href="#guide">“If YouTube asks” in the how-to</a> for exactly what this shares.</div>
+          </details>
+          <details>
+            <summary><span><span class="faq-tag fix">FIX</span>My browser asks “What do you want to do with this file?”</span></summary>
+            <div class="ans">Click <b>Save</b> and the file goes to your Downloads folder. To stop the question for good: in <b>Microsoft Edge</b>, open Settings → Downloads and turn off <b>Ask me what to do with each download</b>. In <b>Chrome</b>, open Settings → Downloads and turn off <b>Ask where to save each file before downloading</b>.</div>
+          </details>
+          <details>
+            <summary><span><span class="faq-tag fix">FIX</span>It's stuck on “Preparing…”</span></summary>
+            <div class="ans">Preparing usually takes 10–30 seconds, and long videos can take a bit more. If it's been over a minute, close the popup, reopen it, and try again. A lower quality such as 720p is often quicker.</div>
+          </details>
+          <details>
+            <summary>Why isn't this on the Chrome Web Store?</summary>
+            <div class="ans">Google doesn't allow YouTube download tools on its store. Loading an extension through Developer mode is a built-in browser feature that lets you install it directly instead.</div>
+          </details>
+          <details>
+            <summary>Will this get my Google account banned?</summary>
+            <div class="ans">No. Developer mode is an official browser feature, and using it for personal extensions doesn't affect your Google account.</div>
+          </details>
+          <details>
+            <summary>The browser shows a “Disable developer mode extensions” pop-up</summary>
+            <div class="ans">Some browsers show this reminder on startup. Just close it (don't click Disable) and the extension keeps working.</div>
+          </details>
+          <details>
+            <summary>Do I need to install any other software?</summary>
+            <div class="ans">No. All the heavy lifting happens on our server, and finished files go straight to your browser's Downloads folder.</div>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= FINAL CTA ================= -->
+    <section class="final">
+      <div class="container">
+        <div class="final-box">
+          <h2>Ready in about a minute</h2>
+          <p>Download the extension and follow the 3 steps above.</p>
+          <div class="hero-cta" style="margin-bottom:0">
+            <a href="/download" class="btn btn-primary btn-lg" data-download>⬇ Download Extension</a>
+            <a href="https://buymeacoffee.com/chriswenfeng" target="_blank" rel="noopener" class="btn btn-coffee btn-lg">☕ Buy me a coffee</a>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 aigility.digital • For personal, educational use.</p>
+      <p>Enjoying it? <a href="https://buymeacoffee.com/chriswenfeng" target="_blank" rel="noopener">Support the project ☕</a></p>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+  (function () {
+    // Icon fallback for local preview (the Worker serves /icon.png in production).
+    document.querySelectorAll('[data-fallback-icon]').forEach(function (img) {
+      img.addEventListener('error', function onErr() {
+        img.removeEventListener('error', onErr);
+        img.src = '../icons/icon128.png';
+      });
+    });
+
+    // ---- Environment detection ----
+    var ua = navigator.userAgent;
+    var plat = (navigator.userAgentData && navigator.userAgentData.platform) || navigator.platform || '';
+    var os = /mac/i.test(plat) ? 'mac' : /win/i.test(plat) ? 'win' : /CrOS/.test(ua) ? 'cros' : 'linux';
+    var isChromium = !!window.chrome || /Chrome|Chromium|Edg\//.test(ua);
+    var browser = navigator.brave ? 'brave' : /Edg\//.test(ua) ? 'edge' : /OPR\//.test(ua) ? 'opera' : 'chrome';
+    var names = { chrome: 'Chrome', edge: 'Edge', brave: 'Brave', opera: 'Opera' };
+    var extUrl = browser + '://extensions';
+
+    if (!isChromium || /Firefox|FxiOS/.test(ua) || (/Safari/.test(ua) && !/Chrome|Chromium|Edg\//.test(ua))) {
+      document.getElementById('browser-warn').classList.add('show');
+    }
+    if (/Android|iPhone|iPad|Mobile/.test(ua)) {
+      var w = document.getElementById('browser-warn');
+      w.innerHTML = '📱 Browser extensions need a <b>computer</b>. Open this page on your Mac or PC to install.';
+      w.classList.add('show');
+    }
+
+    document.getElementById('ext-url').textContent = extUrl;
+    document.getElementById('omni-typed').textContent = extUrl;
+    document.getElementById('kbd-newtab').textContent = os === 'mac' ? '⌘ Cmd' : 'Ctrl';
+
+    var unzip = {
+      mac:   ['Open your <b>Downloads</b> folder and <b>double-click</b> the ZIP. A folder with the same name appears.', 'Double-click the ZIP to unzip'],
+      win:   ['Open your <b>Downloads</b> folder, <b>right-click</b> the ZIP → <span class="ui-word">Extract All…</span> → <span class="ui-word">Extract</span>.', 'Right-click → Extract All'],
+      cros:  ['Open the <b>Files</b> app, double-click the ZIP, then copy the folder inside to <b>My files</b>.', 'Open the ZIP and copy the folder out'],
+      linux: ['Open your <b>Downloads</b> folder, right-click the ZIP and choose <span class="ui-word">Extract Here</span>.', 'Right-click → Extract Here']
+    };
+    document.getElementById('unzip-text').innerHTML = unzip[os][0];
+    document.getElementById('unzip-caption').textContent = unzip[os][1];
+
+    // ---- Wizard state ----
+    var KEY = 'ytdl-setup-v1';
+    var state = { step: 1, done: [], downloaded: false };
+    try { var saved = JSON.parse(localStorage.getItem(KEY)); if (saved && saved.step) state = saved; } catch (e) {}
+    function save() { try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+
+    var wizardEl = document.getElementById('wizard');
+    var tabs = wizardEl.querySelectorAll('.step-tab');
+    var panels = wizardEl.querySelectorAll('.panel');
+    var fill = document.getElementById('stepper-fill');
+
+    function render() {
+      panels.forEach(function (p) { p.classList.toggle('active', +p.dataset.panel === state.step); });
+      tabs.forEach(function (t) {
+        var n = +t.dataset.go;
+        var isDone = state.done.indexOf(n) > -1;
+        t.classList.toggle('done', isDone);
+        t.classList.toggle('active', n === state.step);
+        t.setAttribute('aria-selected', n === state.step);
+      });
+      var completed = state.done.length;
+      fill.style.width = Math.min(completed, 2) / 2 * 100 + '%';
+      document.getElementById('dl-ok').classList.toggle('show', !!state.downloaded);
+      save();
+    }
+
+    function go(n, scroll) {
+      state.step = n;
+      render();
+      if (scroll) {
+        var top = document.getElementById('wizard').getBoundingClientRect().top + window.scrollY - 90;
+        window.scrollTo({ top: top, behavior: 'smooth' });
+      }
+    }
+    function markDone(n) { if (state.done.indexOf(n) < 0) state.done.push(n); }
+
+    tabs.forEach(function (t) { t.addEventListener('click', function () { go(+t.dataset.go); }); });
+    wizardEl.querySelectorAll('[data-next]').forEach(function (b) {
+      b.addEventListener('click', function () { markDone(state.step); go(state.step + 1, true); });
+    });
+    wizardEl.querySelectorAll('[data-prev]').forEach(function (b) {
+      b.addEventListener('click', function () { go(state.step - 1, true); });
+    });
+    wizardEl.querySelector('[data-finish]').addEventListener('click', function () {
+      markDone(1); markDone(2); markDone(3); go(4, true); confetti();
+    });
+    wizardEl.querySelector('[data-restart]').addEventListener('click', function () {
+      state = { step: 1, done: [], downloaded: false }; go(1, true);
+    });
+
+    // Any download button: mark downloaded, bring the user to step 1.
+    document.querySelectorAll('[data-download]').forEach(function (a) {
+      a.addEventListener('click', function () {
+        state.downloaded = true;
+        if (state.step === 4) { state.done = []; }
+        go(1, true);
+        toast('⬇ Downloading… now unzip it (step 1)');
+      });
+    });
+
+    // ---- Copy ----
+    var copyBtn = document.getElementById('copy-btn');
+    copyBtn.addEventListener('click', function () {
+      function ok() {
+        copyBtn.textContent = 'Copied ✓'; copyBtn.classList.add('copied');
+        toast('Copied! Now open a new tab and paste it');
+        setTimeout(function () { copyBtn.textContent = 'Copy'; copyBtn.classList.remove('copied'); }, 2200);
+      }
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(extUrl).then(ok, fallback);
+      } else { fallback(); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = extUrl; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); ok(); } catch (e) { toast('Select the address and copy it manually'); }
+        ta.remove();
+      }
+    });
+
+    // ---- Toast ----
+    var toastEl = document.getElementById('toast'), toastT;
+    function toast(msg) {
+      toastEl.textContent = msg; toastEl.classList.add('show');
+      clearTimeout(toastT); toastT = setTimeout(function () { toastEl.classList.remove('show'); }, 2600);
+    }
+
+    // ---- Confetti ----
+    function confetti() {
+      if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+      var colors = ['#ff0033', '#ff4d6d', '#22c55e', '#60a5fa', '#ffdd00', '#ffffff'];
+      for (var i = 0; i < 90; i++) {
+        var c = document.createElement('span');
+        c.className = 'confetti';
+        c.style.left = Math.random() * 100 + 'vw';
+        c.style.background = colors[i % colors.length];
+        c.style.animationDuration = 1.8 + Math.random() * 1.8 + 's';
+        c.style.animationDelay = Math.random() * 0.4 + 's';
+        c.style.transform = 'rotate(' + Math.random() * 360 + 'deg)';
+        document.body.appendChild(c);
+        setTimeout(function (el) { el.remove(); }, 4200, c);
+      }
+    }
+
+    render();
+
+    // ---- How-to walkthrough (separate from the setup wizard, no saved state) ----
+    (function () {
+      var root = document.getElementById('howto');
+      var hTabs = root.querySelectorAll('.step-tab');
+      var hPanels = root.querySelectorAll('.panel');
+      var hFill = root.querySelector('[data-fill]');
+      var step = 1;
+      function show(n, scroll) {
+        step = n;
+        hPanels.forEach(function (p) { p.classList.toggle('active', +p.dataset.panel === n); });
+        hTabs.forEach(function (t) {
+          var k = +t.dataset.go;
+          t.classList.toggle('active', k === n);
+          t.classList.toggle('done', k < n && k < 4);
+          t.setAttribute('aria-selected', k === n);
+        });
+        hFill.style.width = (Math.min(n, 4) - 1) / 3 * 100 + '%';
+        if (scroll) {
+          var top = root.getBoundingClientRect().top + window.scrollY - 90;
+          window.scrollTo({ top: top, behavior: 'smooth' });
+        }
+      }
+      hTabs.forEach(function (t) { t.addEventListener('click', function () { show(+t.dataset.go); }); });
+      root.querySelectorAll('[data-next]').forEach(function (b) { b.addEventListener('click', function () { show(step + 1, true); }); });
+      root.querySelectorAll('[data-prev]').forEach(function (b) { b.addEventListener('click', function () { show(step - 1, true); }); });
+      root.querySelectorAll('[data-restart]').forEach(function (b) { b.addEventListener('click', function () { show(1, true); }); });
+      show(1);
+    })();
+  })();
+  </script>
+</body>
+</html>
